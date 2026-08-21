@@ -44,30 +44,23 @@
 
 Следствие: нельзя утверждать, что API, Telegram bot, Web Console, PostgreSQL migrations или Cloudflare integration уже реализованы.
 
-## 2026-08-21 — PCS source inspected
+## 2026-08-21 — Early PCS source inspected
 
 **Result:** PASS  
 **Evidence type:** repository inspection
 
-Источник: `bakunity/Project-Context-System`, commit `d6b8aaa4e1450841a601daa77d9da26aae101c88`.
+Источник ранней integration: `bakunity/Project-Context-System`, commit `d6b8aaa4e1450841a601daa77d9da26aae101c88`.
 
-README источника фиксирует принципы:
+На том baseline были зафиксированы основные PCS-принципы, по которым была создана первая адаптированная integration Bakunity Infra.
 
-- repository state beats chat memory;
-- `AGENTS.md` как правила AI;
-- `PROJECT_STATE.md` как текущее truth;
-- `ACTIVE_WORK.md` как текущая работа;
-- `ADR/`, `INCIDENTS/`, `EVIDENCE.md`;
-- `.project/state.json` для bootstrap/freshness.
+Это историческое evidence ранней integration и не описывает актуальный PCS V1 baseline.
 
-Ограничение: на момент интеграции исходный PCS-репозиторий содержит только `README.md`; упомянутые в README installer/validator scripts отсутствуют в репозитории. Поэтому Bakunity Infra получает адаптированную ручную интеграцию PCS, а не копирование готового installer output.
-
-## 2026-08-21 — PCS integrated into Bakunity Infra
+## 2026-08-21 — Early PCS integrated into Bakunity Infra
 
 **Result:** PASS  
 **Evidence type:** repository state
 
-Добавлены/введены в процесс:
+Ранняя integration добавила:
 
 - `AGENTS.md`;
 - `.project/state.json`;
@@ -76,9 +69,43 @@ README источника фиксирует принципы:
 - `docs/EVIDENCE.md`;
 - `docs/ADR/`;
 - `docs/INCIDENTS/`;
-- контекстные правила в contribution/PR workflow.
+- первоначальный `scripts/validate_context.py`.
 
-Проверка файлов выполняется через `scripts/validate_context.py`.
+Позже эта integration была migrated/reconciled до PCS V1, см. следующую запись.
+
+## 2026-08-21 — PCS V1 migration / reconciliation
+
+**Result:** PASS  
+**Evidence type:** repository/tooling validation  
+**PCS source:** `06cd250d2847ee87f66f73930d471d7c1f60991d`  
+**Project base:** `812a36a569e8b11d7eeb317b30b1b3525bad6fbc`  
+**Profile:** `standard-adapted`
+
+Проверено:
+
+- существующий project truth не заменён PCS templates;
+- `AGENTS.md` reconciled с актуальными PCS V1 правилами и сохранил Bakunity Infra rules;
+- `.project/state.json` содержит canonical PCS V1 fields и дополнительные project-specific fields;
+- добавлены GitHub Issue Forms, CODEOWNERS, GitHub manifests, `setup_github.py` и consumer PCS workflow;
+- canonical `scripts/validate_context.py` поддерживает `--ready`;
+- ADR-0001...ADR-0008 сохранены;
+- runtime/server не трогался.
+
+Команды validation в локальном migration worktree:
+
+```text
+python scripts/validate_context.py .
+PCS structural validation: PASS
+
+python scripts/validate_context.py . --ready
+PCS readiness validation: PASS
+```
+
+Ограничения:
+
+- validation подтверждает PCS structure/readiness, а не product runtime;
+- GitHub labels/project/ruleset manifests не применялись live;
+- server/staging/production checks не выполнялись.
 
 ## Шаблон будущей записи
 

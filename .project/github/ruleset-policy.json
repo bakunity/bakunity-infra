@@ -1,0 +1,5 @@
+{
+  "target_branch":"main",
+  "recommended":{"require_pull_request":true,"require_status_checks":["validate-context"],"block_force_push":true,"block_deletion":true,"require_conversation_resolution":true},
+  "note":"PCS policy manifest; review before applying repository governance."
+}

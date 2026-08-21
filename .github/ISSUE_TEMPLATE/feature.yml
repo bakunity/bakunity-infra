@@ -1,0 +1,43 @@
+name: Feature
+description: Define a bounded product or engineering capability
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it matters
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Definition of Done
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints / must preserve
+  - type: textarea
+    id: tests
+    attributes:
+      label: Verification
+    validations:
+      required: true
+  - type: dropdown
+    id: runtime
+    attributes:
+      label: Runtime access required?
+      options:
+        - No — repository/local/CI only
+        - Later — staging/live gate after implementation
+        - Yes — explicitly required by this task
+    validations:
+      required: true

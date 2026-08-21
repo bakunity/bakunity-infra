@@ -1,0 +1,10 @@
+[
+  {"name":"pcs:context","color":"5319e7","description":"Project context or context continuity work"},
+  {"name":"pcs:drift","color":"b60205","description":"Conflicting or stale project context"},
+  {"name":"pcs:architecture","color":"0052cc","description":"Architecture or invariant change"},
+  {"name":"pcs:evidence","color":"0e8a16","description":"Verification or acceptance evidence"},
+  {"name":"pcs:incident","color":"d93f0b","description":"Incident, failure, or root-cause work"},
+  {"name":"status:blocked","color":"b60205","description":"Cannot safely continue"},
+  {"name":"status:live-gate","color":"fbca04","description":"Implementation done; live/runtime verification still required"},
+  {"name":"agent-task","color":"c5def5","description":"Bounded task intended for an AI/coding agent"}
+]

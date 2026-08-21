@@ -19,7 +19,9 @@
 - V1 зафиксирована как управление доменами/DNS с минимальным Server Catalog и Domain Binding.
 - Phase 0 прошёл архитектурную ревизию со статусом PASS.
 - Backlog V1 сформирован.
-- Project Context System (PCS) встроена в репозиторий как система постоянного AI-контекста.
+- Project Context System интегрирована и reconciled до **PCS V1**, baseline `06cd250d2847ee87f66f73930d471d7c1f60991d`, профиль `standard-adapted`.
+- В репозитории есть canonical PCS validator с structural/readiness режимами и GitHub operational-layer manifests/workflow.
+- PCS V1 migration не меняла сервер/runtime и не меняла product implementation state.
 
 ## Чего сейчас нет
 
@@ -111,4 +113,6 @@ Audit фиксирует mutation
 - Backlog: `docs/BACKLOG_V1.md`
 - Phase 0 review: `docs/PHASE0_REVIEW.md`
 - Активная работа: `docs/ACTIVE_WORK.md`
+- PCS integration: `docs/CONTEXT_SYSTEM.md`
+- GitHub integration: `docs/GITHUB_INTEGRATION.md`
 - Evidence: `docs/EVIDENCE.md`

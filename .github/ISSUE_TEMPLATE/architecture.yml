@@ -1,0 +1,37 @@
+name: Architecture change
+description: Propose a change to system structure or an invariant
+title: "[Architecture]: "
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+    validations:
+      required: true
+  - type: textarea
+    id: decision
+    attributes:
+      label: Decision needed
+    validations:
+      required: true
+  - type: textarea
+    id: options
+    attributes:
+      label: Options considered
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Affected components / migration impact
+    validations:
+      required: true
+  - type: checkboxes
+    id: adr
+    attributes:
+      label: Completion requirements
+      options:
+        - label: ARCHITECTURE.md must be reconciled if accepted
+          required: true
+        - label: An ADR must be created or updated
+          required: true

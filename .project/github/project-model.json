@@ -1,0 +1,5 @@
+{
+  "name":"Development",
+  "fields":{"Status":["Inbox","Ready","In progress","Review","Live gate","Done"],"Priority":["P0","P1","P2","P3"],"Type":["Feature","Bug","Architecture","Incident","Context","Research","Maintenance"],"Risk":["Low","Medium","High"],"Runtime":["No runtime","Staging later","Live required"]},
+  "rule":"ROADMAP.md is strategy; GitHub Project is execution."
+}

@@ -2,7 +2,7 @@
 
 Этот файл сохранён как короткая точка входа для совместимости со старой структурой документации.
 
-Authoritative источник архитектурных и процессных решений теперь находится в [`docs/ADR/`](ADR/README.md) в рамках Project Context System.
+Authoritative источник архитектурных и процессных решений находится в [`docs/ADR/`](ADR/README.md) в рамках Project Context System.
 
 ## Принятые решения
 
@@ -16,6 +16,7 @@ Authoritative источник архитектурных и процессны�
 | [ADR-0006](ADR/0006-security-before-automation.md) | Security foundation до remote automation | Accepted |
 | [ADR-0007](ADR/0007-no-premature-microservices.md) | Никаких преждевременных микросервисов | Accepted |
 | [ADR-0008](ADR/0008-project-context-system.md) | Project Context System | Accepted |
+| [ADR-0009](ADR/0009-pcs-v1-reconciliation.md) | Reconciliation существующей PCS-интеграции с PCS V1 | Accepted |
 
 ## Правило
 

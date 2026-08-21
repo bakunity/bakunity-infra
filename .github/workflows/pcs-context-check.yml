@@ -1,0 +1,27 @@
+name: PCS Context Check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-context:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate PCS structure
+        run: python scripts/validate_context.py .
+
+      - name: Validate PCS readiness
+        run: python scripts/validate_context.py . --ready

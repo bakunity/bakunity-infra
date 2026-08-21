@@ -1,28 +1,35 @@
 # Активная работа
 
-**Статус:** PCS bootstrap завершён; product-code не разрабатывается.  
+**Статус:** PCS V1 migration/reconciliation завершена; product-code не разрабатывается.  
 **Обновлено:** 2026-08-21
 
 Этот файл отвечает только на вопрос: **что делается прямо сейчас и что является следующим конкретным шагом**.
 
 ## Сейчас
 
-Project Context System интегрирована в Bakunity Infra.
+Существующая ранняя интеграция Project Context System reconciled до PCS V1 baseline `06cd250d2847ee87f66f73930d471d7c1f60991d` в профиле `standard-adapted`.
 
-На момент этой записи активной задачи по реализации backend/Web/Telegram нет. Проект остаётся между завершённым Phase 0 и явным стартом V1.
+Migration была repository-only:
 
-## Следующие decision gates
+- server/runtime не трогался;
+- product implementation не начиналась;
+- project-specific truth сохранена;
+- authoritative product/architecture/API/DB/UX/security документы не заменялись шаблонами PCS.
 
-Перед первой реализацией соответствующих блоков нужно закрыть:
+На момент этой записи активной задачи по реализации backend/Web/Telegram нет.
 
-1. `BI-0002` — Web authentication decision + ADR.
-2. `BI-0003` — concurrency/idempotency decisions + ADR при необходимости.
-3. Production secret storage decision до подключения реальных provider credentials.
-4. Reconciliation/retry semantics для DNS provider operations.
+## Следующий безопасный шаг
+
+Первый decision gate перед началом соответствующей реализации:
+
+1. `BI-0002` — выбрать Web authentication mechanism и оформить ADR.
+2. Затем `BI-0003` — concurrency/idempotency decisions.
+3. До реальных provider credentials — production secret storage decision.
+4. До write DNS flows — reconciliation/retry semantics.
 
 ## После явного старта разработки
 
-Рекомендуемый порядок берётся из `docs/BACKLOG_V1.md`:
+Порядок берётся из `docs/BACKLOG_V1.md`:
 
 ```text
 Scaffold
@@ -49,6 +56,12 @@ Web create flow
 - Cloudflare production credentials;
 - SSH automation.
 
+## Runtime boundary
+
+По умолчанию текущая работа — repository/local/CI only.
+
+Подключение к серверам, staging/production deploy и любые runtime mutations требуют отдельной явной задачи и live gate.
+
 ## Правило обновления
 
 Когда начинается новая задача, этот файл должен получить:
@@ -56,8 +69,12 @@ Web create flow
 - ID задачи/epic;
 - цель;
 - base commit;
+- linked Issue, если есть;
+- allowed/forbidden scope;
 - затрагиваемые authoritative документы;
 - критерий завершения;
+- tests/smoke plan;
+- runtime scope;
 - фактический результат после завершения.
 
-После завершения доказательства переносятся в `docs/EVIDENCE.md`, а текущее состояние — в `docs/PROJECT_STATE.md` при необходимости.
+После завершения evidence переносится в `docs/EVIDENCE.md`, а текущее состояние — в `docs/PROJECT_STATE.md` при необходимости.

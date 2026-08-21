@@ -1,0 +1,41 @@
+name: Incident
+description: Record a significant runtime or release failure
+title: "[Incident]: "
+body:
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options: [SEV-1, SEV-2, SEV-3, SEV-4]
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+    validations:
+      required: true
+  - type: textarea
+    id: symptom
+    attributes:
+      label: Symptom and impact
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Remove secrets.
+    validations:
+      required: true
+  - type: textarea
+    id: rootcause
+    attributes:
+      label: Root cause status
+      description: CONFIRMED / INFERRED / UNKNOWN plus explanation.
+    validations:
+      required: true
+  - type: textarea
+    id: regression
+    attributes:
+      label: Regression protection / new invariant

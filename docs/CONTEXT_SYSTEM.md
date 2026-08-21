@@ -1,37 +1,66 @@
 # Project Context System в Bakunity Infra
 
-Bakunity Infra использует адаптированную **Project Context System (PCS)** из репозитория `bakunity/Project-Context-System`.
+Bakunity Infra использует адаптированную **Project Context System (PCS) V1** из репозитория `bakunity/Project-Context-System`.
 
-Источник интеграции: commit `d6b8aaa4e1450841a601daa77d9da26aae101c88`.
+Текущий reconciliation baseline: `06cd250d2847ee87f66f73930d471d7c1f60991d`.
+
+Профиль проекта: **standard-adapted**.
 
 Цель PCS — сделать состояние проекта переносимым между ChatGPT, Codex, другими AI agents и человеческими разработчиками без зависимости от памяти конкретного чата.
 
 > **CHAT IS WORKSPACE. GIT IS MEMORY. DOCS ARE CURRENT KNOWLEDGE.**
 
-## Почему система адаптирована, а не скопирована
+## История integration
 
-Bakunity Infra уже имела развитую документацию до подключения PCS.
+Ранняя интеграция Bakunity Infra была сделана по PCS commit `d6b8aaa4e1450841a601daa77d9da26aae101c88`.
 
-Поэтому мы не создаём дублирующие документы вроде второй архитектуры или второго roadmap. Вместо этого существующие authoritative файлы включены в карту PCS.
+После появления PCS V1 существующая integration была **migrated/reconciled**, а не установлена заново:
 
-Кроме того, исходный репозиторий PCS на момент интеграции содержит спецификацию в `README.md`, но не содержит упомянутых installer/validator scripts. Поэтому интеграция выполнена вручную по принципам PCS.
+- `install_pcs.py --force` не использовался;
+- существующий `AGENTS.md` не затирался шаблоном;
+- `PROJECT_STATE.md` и `ACTIVE_WORK.md` сохранены и reconciled;
+- GOALS / PRODUCT / ARCHITECTURE / ROADMAP / API / DB / UX / SECURITY docs сохранены;
+- ADR-0001...ADR-0008 сохранены;
+- не создано дублирующих authoritative docs.
 
-## Профиль
+## Почему профиль standard-adapted
 
-Для Bakunity Infra используется профиль, близкий к **standard**, дополненный ссылками на уже существующую подробную продуктовую спецификацию.
+Bakunity Infra уже имела подробную проектную документацию до PCS.
 
-Добавлено:
+Поэтому PCS V1 используется как protocol/process layer поверх существующих authoritative документов, а не как причина создать вторые копии архитектуры, roadmap или product truth.
+
+## Canonical machine state
+
+`.project/state.json` использует canonical PCS V1 pointers:
 
 ```text
-AGENTS.md
-.project/state.json
-docs/PROJECT_STATE.md
-docs/ACTIVE_WORK.md
-docs/EVIDENCE.md
-docs/ADR/
-docs/INCIDENTS/
-scripts/validate_context.py
+state_doc
+active_work_doc
+architecture_doc
+roadmap_doc
+adr_dir
+incidents_dir
+evidence_doc
+state_based_on_commit
+last_verified_commit
+active_branch
+active_pr
+status
+updated_at
 ```
+
+Дополнительный project-specific machine context Bakunity Infra сохраняется:
+
+```text
+phase
+implementation_status
+open_decision_gates
+authoritative
+knowledge_status
+pcs_source
+```
+
+PCS schema допускает project-specific дополнительные поля.
 
 ## Карта authoritative knowledge
 
@@ -51,6 +80,7 @@ Telegram UX             → docs/TELEGRAM_UX.md
 Web UX                  → docs/WEB_UX.md
 Permissions             → docs/PERMISSIONS.md
 Security                → docs/SECURITY.md
+GitHub operational      → docs/GITHUB_INTEGRATION.md
 Incidents/root cause    → docs/INCIDENTS/
 Evidence                → docs/EVIDENCE.md
 Freshness/bootstrap     → .project/state.json
@@ -63,64 +93,58 @@ Freshness/bootstrap     → .project/state.json
 
 Например:
 
-- не создавать `CONTEXT/ARCHITECTURE.md`, если authoritative architecture уже находится в `docs/ARCHITECTURE.md`;
+- не создавать вторую architecture document рядом с `docs/ARCHITECTURE.md`;
 - не копировать roadmap в `PROJECT_STATE.md`;
-- не превращать handoff в постоянную параллельную документацию;
+- не превращать GitHub Issue или handoff в постоянную параллельную truth;
 - не записывать runtime-факт только в чат;
 - не использовать AI memory как единственное подтверждение project-specific состояния.
 
-## Freshness
+## Freshness / reconciliation
 
-`.project/state.json` хранит commit, относительно которого project state был в последний раз сознательно сверён.
-
-Если текущий HEAD отличается:
+Если HEAD отличается от `state_based_on_commit`:
 
 1. определить изменённые файлы;
 2. понять, меняют ли они semantic project state;
 3. при необходимости обновить `PROJECT_STATE`, `ACTIVE_WORK`, `EVIDENCE` и профильный authoritative документ;
 4. только затем считать контекст reconciled.
 
-Само отличие HEAD от `state_based_on_commit` не всегда означает ошибку: docs-only/context-only commit может не менять продуктовую истину. Но drift должен быть осознанным.
+Сам drift HEAD не всегда ошибка: context/tooling-only commit может не менять product truth. Но drift должен быть осознанным.
 
-## Когда обновлять context
+## GitHub operational layer
 
-Обязательное обновление при:
-
-- начале/завершении milestone;
-- смене активной задачи;
-- изменении V1 scope;
-- новом ADR;
-- изменении API/DB/domain model;
-- подтверждённом incident/root cause;
-- изменении deployment topology;
-- подключении production provider;
-- появлении runtime evidence, которое меняет понимание проекта.
-
-## Handoff между AI-сессиями
-
-Handoff не является отдельной памятью проекта.
-
-Минимальный handoff:
+PCS V1 добавляет:
 
 ```text
-Base/HEAD commit
-Active task
-Что изменилось
-Что проверено
-Какие authoritative docs обновлены
-Что делать следующим шагом
+.github/ISSUE_TEMPLATE/
+.github/CODEOWNERS
+.github/workflows/pcs-context-check.yml
+.project/github/
+scripts/setup_github.py
+docs/GITHUB_INTEGRATION.md
 ```
 
-Новая сессия всё равно выполняет bootstrap из `AGENTS.md`.
+GitHub Issues/Projects/PRs координируют execution и не заменяют repository truth.
+
+## Runtime boundary
+
+Default PCS agent scope: **repository/local/CI only**.
+
+Server/staging/production действия требуют отдельного explicit task, environment, verification plan и evidence update.
 
 ## Validation
 
-Запуск локально:
+Structural:
 
 ```bash
 python scripts/validate_context.py .
 ```
 
-Validator проверяет наличие обязательных PCS-файлов, валидность `.project/state.json` и базовые ссылки authoritative context.
+Readiness:
 
-Он не заменяет инженерную ревизию смысла документов.
+```bash
+python scripts/validate_context.py . --ready
+```
+
+`PCS READY` допустимо сообщать только после PASS режима `--ready`.
+
+Validator проверяет protocol structure/readiness, но не заменяет инженерную ревизию смысла project-specific документов.

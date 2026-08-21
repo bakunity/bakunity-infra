@@ -31,5 +31,6 @@ Date: YYYY-MM-DD
 - [ADR-0006 — Infrastructure automation после security foundation](0006-security-before-automation.md)
 - [ADR-0007 — Никаких преждевременных микросервисов](0007-no-premature-microservices.md)
 - [ADR-0008 — Project Context System](0008-project-context-system.md)
+- [ADR-0009 — Reconciliation существующей PCS-интеграции с PCS V1](0009-pcs-v1-reconciliation.md)
 
 `docs/DECISIONS.md` оставлен как совместимый индекс/историческая точка входа, но детали решений хранятся здесь.
