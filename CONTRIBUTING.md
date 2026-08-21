@@ -1,66 +1,67 @@
-# Contributing to Bakunity Infra
+# Правила разработки Bakunity Infra
 
-Bakunity Infra is currently in the planning and architecture phase. Contributions should preserve the product boundaries defined in the repository documentation.
+Bakunity Infra сейчас находится на этапе планирования и проектирования архитектуры. Любые будущие изменения должны сохранять границы продукта, зафиксированные в документации репозитория.
 
-## Before implementation
+## Перед реализацией
 
-Before adding a major capability, confirm:
+Перед добавлением крупной возможности нужно определить:
 
-1. Which business module owns it.
-2. Whether it belongs in the current roadmap phase.
-3. Whether both Web and Telegram can reuse the same application behavior.
-4. Which external adapters are required.
-5. What authorization rules apply.
-6. What audit event should be produced by infrastructure-changing actions.
-7. Whether the change introduces new secrets or privileged credentials.
+1. Какому бизнес-модулю она принадлежит.
+2. Относится ли она к текущему этапу roadmap.
+3. Могут ли Web и Telegram использовать одну и ту же бизнес-логику.
+4. Какие внешние адаптеры потребуются.
+5. Какие правила авторизации должны применяться.
+6. Какое событие аудита должно создаваться при изменении инфраструктуры.
+7. Появляются ли новые секреты или привилегированные учётные данные.
 
-## Architecture rules
+## Архитектурные правила
 
-- Keep the project a modular monolith unless there is a documented reason to extract a service.
-- Do not place business logic in Telegram handlers or web components.
-- Do not call infrastructure providers directly from UI/client layers.
-- Keep external providers behind adapters/interfaces.
-- Keep module boundaries explicit.
-- Avoid generic shared code unless it is genuinely shared and stable.
-- Prefer clear use cases over hidden cross-module side effects.
+- Сохранять проект модульным монолитом, пока нет документированной причины выделять отдельный сервис.
+- Не размещать бизнес-логику в Telegram handlers или веб-компонентах.
+- Не обращаться к инфраструктурным провайдерам напрямую из UI/client layer.
+- Держать внешние системы за интерфейсами и адаптерами.
+- Сохранять явные границы модулей.
+- Не создавать общий shared-код без реальной и стабильной потребности.
+- Предпочитать явные use case скрытым побочным эффектам между модулями.
 
-## Web and Telegram
+## Web и Telegram
 
-Web Console and Telegram Bot are clients of the same system.
+Веб-панель и Telegram-бот являются клиентами одной системы.
 
-A feature should not have two independent implementations of the same business rule.
+Одна бизнес-функция не должна иметь две независимые реализации одного и того же правила.
 
-Example:
+Пример:
 
 ```text
 Web ───────┐
-           ├── CreateSubdomain use case ──> Domains/DNS modules
+           ├── use case CreateSubdomain ──> модули Domains / DNS
 Telegram ──┘
 ```
 
-## Security rules
+## Правила безопасности
 
-Never commit real credentials, tokens, private keys or production environment files.
+Никогда не коммитить реальные учётные данные, токены, приватные ключи или production-файлы окружения.
 
-If a change requires a new secret, document only the expected variable/configuration name and purpose.
+Если изменение требует нового секрета, в документации указывается только название переменной/параметра и его назначение.
 
-Infrastructure-changing operations should include authorization and auditing from the beginning.
+Операции, изменяющие инфраструктуру, должны с самого начала учитывать авторизацию и аудит.
 
-## Change scope
+## Размер изменений
 
-Prefer small, understandable changes.
+Предпочтительны небольшие и понятные изменения.
 
-A pull request should ideally focus on one architectural or product concern rather than combining unrelated refactors, infrastructure changes and features.
+Один pull request по возможности должен решать одну архитектурную или продуктовую задачу, а не одновременно объединять несвязанные рефакторинги, инфраструктурные изменения и новые функции.
 
-## Documentation
+## Документация
 
-When a change affects system boundaries or product behavior, update the relevant documentation:
+Если изменение влияет на границы системы или поведение продукта, необходимо обновить соответствующие документы:
 
 - `docs/PRODUCT.md`
 - `docs/ARCHITECTURE.md`
 - `docs/ROADMAP.md`
 - `docs/SECURITY.md`
+- `docs/DECISIONS.md`, если меняется принятое архитектурное решение.
 
-## Current status
+## Текущий статус
 
-Implementation has not started yet. During the current phase, documentation and architecture decisions take priority over scaffolding code that may need to be replaced later.
+Реализация ещё не началась. На текущем этапе документация и архитектурные решения имеют приоритет над созданием каркаса кода, который затем пришлось бы переделывать.
