@@ -4,7 +4,8 @@
 
 **Статус:** Phase 0 завершён / подготовка к V1  
 **Архитектура:** Модульный монолит  
-**Интерфейсы:** Веб-панель, Telegram-бот, REST API
+**Интерфейсы:** Веб-панель, Telegram-бот, REST API  
+**Контекст разработки:** Project Context System (PCS)
 
 Bakunity Infra — единая система управления инфраструктурой, которая должна упростить повседневные операции с доменами и серверами как через веб-интерфейс, так и через Telegram.
 
@@ -152,6 +153,31 @@ bakunity-infra/
 
 Эта структура является целевой архитектурой. Production-код пока не создан.
 
+## Project Context System
+
+Проект использует [Project Context System](https://github.com/bakunity/Project-Context-System), чтобы рабочее состояние не зависело от памяти конкретного чата или AI-сессии.
+
+> **CHAT IS WORKSPACE. GIT IS MEMORY. DOCS ARE CURRENT KNOWLEDGE.**
+
+Новая AI-сессия начинает работу с `AGENTS.md`, `.project/state.json`, `docs/PROJECT_STATE.md`, `docs/ARCHITECTURE.md` и `docs/ACTIVE_WORK.md`, а затем читает только релевантные ADR и профильные документы.
+
+Ключевые PCS-файлы:
+
+- [`AGENTS.md`](AGENTS.md) — правила работы AI;
+- [`.project/state.json`](.project/state.json) — машинный state/freshness;
+- [`docs/PROJECT_STATE.md`](docs/PROJECT_STATE.md) — что истинно о проекте сейчас;
+- [`docs/ACTIVE_WORK.md`](docs/ACTIVE_WORK.md) — что делается сейчас;
+- [`docs/ADR/`](docs/ADR/README.md) — почему были приняты решения;
+- [`docs/INCIDENTS/`](docs/INCIDENTS/README.md) — инциденты и root cause;
+- [`docs/EVIDENCE.md`](docs/EVIDENCE.md) — что реально проверено;
+- [`docs/CONTEXT_SYSTEM.md`](docs/CONTEXT_SYSTEM.md) — правила интеграции PCS в этот репозиторий.
+
+Локальная базовая проверка контекста:
+
+```bash
+python scripts/validate_context.py .
+```
+
 ## Документация
 
 ### Вектор продукта
@@ -164,7 +190,8 @@ bakunity-infra/
 ### Архитектура
 
 - [Архитектура](docs/ARCHITECTURE.md)
-- [Архитектурные решения](docs/DECISIONS.md)
+- [ADR registry](docs/ADR/README.md)
+- [Архитектурные решения — совместимый индекс](docs/DECISIONS.md)
 - [Архитектурная ревизия Phase 0](docs/PHASE0_REVIEW.md)
 - [Модель предметной области](docs/DOMAIN_MODEL.md)
 - [Модель базы данных](docs/DATABASE_MODEL.md)
@@ -218,6 +245,8 @@ Phase 0 прошёл архитектурную сверку. Перед реа�
 ## Текущий этап
 
 **Phase 0 завершён. Разработка V1 ещё не начата.**
+
+Текущее состояние всегда сверяется по [`docs/PROJECT_STATE.md`](docs/PROJECT_STATE.md), а текущая работа — по [`docs/ACTIVE_WORK.md`](docs/ACTIVE_WORK.md).
 
 Следующий шаг — выполнять [BACKLOG_V1.md](docs/BACKLOG_V1.md) с начала, закрывая decision gates перед соответствующими блоками реализации.
 
