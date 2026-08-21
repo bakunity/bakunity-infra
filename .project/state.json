@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "bakunity-infra",
+  "context_system": "Project Context System",
+  "context_profile": "standard-adapted",
+  "pcs_source": {
+    "repository": "bakunity/Project-Context-System",
+    "commit": "d6b8aaa4e1450841a601daa77d9da26aae101c88"
+  },
+  "state_based_on_commit": "3cab8459d0f2cb3b082cf282b8275b88579cd2a5",
+  "last_reconciled_at": "2026-08-21T15:36:00+03:00",
+  "phase": "phase-0-complete-pre-v1",
+  "implementation_status": "not_started",
+  "active_work": "decision-gates-before-v1-implementation",
+  "knowledge_status": "CONFIRMED",
+  "authoritative": {
+    "project_state": "docs/PROJECT_STATE.md",
+    "active_work": "docs/ACTIVE_WORK.md",
+    "goals": "docs/GOALS.md",
+    "product": "docs/PRODUCT.md",
+    "architecture": "docs/ARCHITECTURE.md",
+    "adr": "docs/ADR/",
+    "roadmap": "docs/ROADMAP.md",
+    "backlog": "docs/BACKLOG_V1.md",
+    "domain_model": "docs/DOMAIN_MODEL.md",
+    "database_model": "docs/DATABASE_MODEL.md",
+    "api_contract": "docs/API_CONTRACT.md",
+    "telegram_ux": "docs/TELEGRAM_UX.md",
+    "web_ux": "docs/WEB_UX.md",
+    "permissions": "docs/PERMISSIONS.md",
+    "security": "docs/SECURITY.md",
+    "incidents": "docs/INCIDENTS/",
+    "evidence": "docs/EVIDENCE.md"
+  },
+  "open_decision_gates": [
+    "web_authentication",
+    "optimistic_concurrency",
+    "idempotency_storage_ttl",
+    "production_secret_storage",
+    "zone_level_apex_dns_semantics",
+    "provider_reconciliation_retry"
+  ],
+  "notes": [
+    "state_based_on_commit points to the last product/documentation state reviewed before PCS bootstrap",
+    "later PCS-only commits are expected drift and do not imply product implementation"
+  ]
+}
