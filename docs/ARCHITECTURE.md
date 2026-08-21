@@ -1,21 +1,21 @@
-# Architecture
+# Архитектура
 
-## Architectural style
+## Архитектурный стиль
 
-Bakunity Infra is designed as a **modular monolith**.
+Bakunity Infra проектируется как **модульный монолит**.
 
-The system remains one product and one primary application boundary while its internal capabilities are separated into explicit business modules.
+Система остаётся одним продуктом и одной основной границей приложения, но внутренние возможности разделяются на явные бизнес-модули.
 
-The goal is to avoid both extremes:
+Цель — избежать двух крайностей:
 
-- a tightly coupled monolith where everything imports everything;
-- premature microservices that add deployment and operational complexity before it is justified.
+- тесно связанного монолита, где всё импортирует всё;
+- преждевременных микросервисов, которые добавляют сложность деплоя и эксплуатации до появления реальной необходимости.
 
-## High-level model
+## Высокоуровневая модель
 
 ```text
                   ┌─────────────────┐
-                  │   Web Console   │
+                  │   Веб-панель    │
                   └────────┬────────┘
                            │
                   ┌────────▼────────┐
@@ -23,149 +23,149 @@ The goal is to avoid both extremes:
                   └────────┬────────┘
                            │
 ┌─────────────────┐        │
-│  Telegram Bot   ├────────┤
+│  Telegram-бот   ├────────┤
 └─────────────────┘        │
                            ▼
                  ┌───────────────────┐
-                 │ Application Core  │
+                 │  Ядро приложения │
                  └─────────┬─────────┘
                            │
       ┌────────────┬───────┼──────────┬────────────┐
       ▼            ▼       ▼          ▼            ▼
-   Identity     Domains   DNS      Servers      Audit
-                              
+  Identity      Domains   DNS      Servers      Audit
+
               Deployments / Proxy / Certificates
-                     added in later phases
+                  добавляются позже
 ```
 
-## Module boundaries
+## Границы модулей
 
-Planned modules:
+Планируемые модули:
 
 ### Identity & Access
 
-Owns users, roles, permissions, client identities and access decisions.
+Отвечает за пользователей, роли, права, идентификаторы клиентов и решения о доступе.
 
 ### Domains
 
-Owns managed subdomains, ownership, lifecycle, limits and relationships to zones and servers.
+Отвечает за управляемые поддомены, владение, жизненный цикл, лимиты и связи с зонами и серверами.
 
 ### DNS
 
-Owns DNS records, DNS operations and provider-neutral DNS behavior.
+Отвечает за DNS-записи, DNS-операции и поведение, независимое от конкретного провайдера.
 
 ### Servers
 
-Owns server inventory and server metadata. Remote provisioning is intentionally outside the initial scope.
+Отвечает за каталог серверов и их метаданные. Удалённая автоматическая настройка серверов специально не входит в начальный этап.
 
 ### Deployments
 
-Owns application deployment state and lifecycle in later phases.
+В более поздних этапах отвечает за состояние и жизненный цикл деплоев приложений.
 
 ### Proxy
 
-Owns reverse-proxy routing behavior in later phases.
+В более поздних этапах отвечает за маршрутизацию reverse proxy.
 
 ### Certificates
 
-Owns certificate lifecycle and TLS-related state in later phases.
+В более поздних этапах отвечает за жизненный цикл сертификатов и TLS-состояние.
 
 ### Monitoring
 
-Owns health and availability signals in later phases.
+В более поздних этапах отвечает за сигналы здоровья и доступности.
 
 ### Audit
 
-Owns append-oriented records of meaningful user and system actions.
+Отвечает за последовательный журнал значимых действий пользователей и системы.
 
-## Clients are not business logic
+## Клиенты не содержат бизнес-логику
 
-Telegram handlers and web pages must not contain infrastructure business rules.
+Telegram handlers и веб-страницы не должны содержать инфраструктурные бизнес-правила.
 
-For example, Telegram must not directly call Cloudflare to create a record.
+Например, Telegram не должен напрямую обращаться к Cloudflare для создания DNS-записи.
 
-Preferred flow:
+Предпочтительный поток:
 
 ```text
-Telegram/Web
-    │
-    ▼
-Application use case
-    │
-    ▼
-Domain/DNS module
-    │
-    ▼
-Provider interface
-    │
-    ▼
-Cloudflare adapter
+Telegram / Web
+      │
+      ▼
+Use case приложения
+      │
+      ▼
+Модуль Domains / DNS
+      │
+      ▼
+Интерфейс провайдера
+      │
+      ▼
+Адаптер Cloudflare
 ```
 
-This keeps behavior consistent across clients and allows providers to change without rewriting the product interface.
+Так поведение остаётся одинаковым во всех клиентах, а провайдера можно менять без переписывания интерфейсов продукта.
 
-## Ports and adapters at external boundaries
+## Ports & Adapters на внешних границах
 
-External systems should be accessed through explicit interfaces/adapters.
+Внешние системы должны подключаться через явные интерфейсы и адаптеры.
 
-Examples:
+Примеры:
 
-- DNS provider adapter;
-- database adapter;
-- SSH adapter;
-- reverse-proxy adapter;
-- certificate provider/ACME adapter;
-- notification adapter.
+- адаптер DNS-провайдера;
+- адаптер базы данных;
+- SSH-адаптер;
+- адаптер reverse proxy;
+- адаптер сертификатов / ACME;
+- адаптер уведомлений.
 
-Cloudflare is the planned first DNS adapter, not a permanent dependency of the domain model.
+Cloudflare — первый планируемый DNS-адаптер, а не постоянная зависимость доменной модели.
 
-## Data ownership
+## Владение данными
 
-Each module should own its own business rules and data access patterns even if the first version uses one PostgreSQL database.
+Каждый модуль должен владеть своими бизнес-правилами и правилами доступа к данным, даже если первая версия использует одну PostgreSQL-базу.
 
-A single database does not mean unrestricted cross-module access.
+Одна база данных не означает свободный доступ каждого модуля к таблицам остальных модулей.
 
-Cross-module interaction should happen through explicit application services, commands, queries or published internal contracts rather than arbitrary table access.
+Взаимодействие между модулями должно происходить через явные application services, команды, запросы или внутренние контракты, а не через произвольный доступ к чужим таблицам.
 
-## API boundary
+## Граница API
 
-The REST API is a public application boundary for Web and future integrations.
+REST API является публичной границей приложения для Web и будущих интеграций.
 
-Telegram may run in the same deployable unit, but it must invoke the same application use cases as the HTTP API rather than maintaining separate business rules.
+Telegram может работать в том же deployable unit, но должен вызывать те же use case приложения, что и HTTP API, а не поддерживать отдельную бизнес-логику.
 
-## Planned technology direction
+## Планируемый технологический стек
 
-Current architectural direction, not yet implementation:
+Текущее направление, а не уже начатая реализация:
 
-- Python / FastAPI for backend and REST API;
-- aiogram for Telegram;
-- PostgreSQL for persistent state;
-- SQLAlchemy and Alembic for persistence and migrations;
-- Next.js / TypeScript for the Web Console;
-- Cloudflare as the initial DNS provider.
+- Python / FastAPI — backend и REST API;
+- aiogram — Telegram;
+- PostgreSQL — постоянное состояние;
+- SQLAlchemy и Alembic — работа с данными и миграции;
+- Next.js / TypeScript — веб-панель;
+- Cloudflare — первый DNS-провайдер.
 
-Technology choices may be adjusted before implementation if a better fit is identified.
+До начала реализации технологии могут быть скорректированы, если найдётся более подходящий вариант.
 
-## Deployment philosophy
+## Подход к деплою
 
-Initial deployment should stay simple:
+Начальный деплой должен оставаться простым:
 
-- one repository;
-- one primary application stack;
-- one PostgreSQL instance;
-- clear process separation where useful;
-- no service decomposition without a concrete need.
+- один репозиторий;
+- один основной стек приложения;
+- один PostgreSQL-инстанс;
+- разделение процессов там, где это полезно;
+- без выделения сервисов без конкретной причины.
 
-A module can later be extracted into an independent service when there is a measurable reason such as isolation, scaling, workload type or ownership boundaries.
+Позже модуль может быть вынесен в отдельный сервис, если появится измеримая причина: изоляция, масштабирование, тип нагрузки или отдельная операционная ответственность.
 
-## Architectural invariants
+## Архитектурные инварианты
 
-These should remain true unless an architecture decision explicitly changes them:
+Эти правила должны сохраняться, пока отдельное архитектурное решение явно их не изменит:
 
-1. Web and Telegram share one source of truth.
-2. Business logic is independent from Telegram UI and web UI.
-3. External providers are accessed through adapters.
-4. Secrets are never stored in source control.
-5. Infrastructure mutations are auditable.
-6. Authorization is enforced in the application layer, not only in the UI.
-7. The first implementation favors simplicity over distributed-system complexity.
+1. Web и Telegram используют один источник истины.
+2. Бизнес-логика не зависит от Telegram UI и Web UI.
+3. Внешние провайдеры подключаются через адаптеры.
+4. Секреты никогда не хранятся в исходном коде.
+5. Изменения инфраструктуры доступны для аудита.
+6. Авторизация проверяется в application layer, а не только в UI.
+7. Первая реализация предпочитает простоту сложности распределённых систем.
