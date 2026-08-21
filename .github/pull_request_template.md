@@ -1,31 +1,31 @@
-## What changes
+## Что изменено
 
-Describe the change and why it is needed.
+Опишите изменение и зачем оно нужно.
 
-## Scope
+## Область изменений
 
-- Module(s):
-- Client(s): Web / Telegram / API / none
-- Roadmap phase:
+- Модуль(и):
+- Клиент(ы): Web / Telegram / API / нет
+- Этап roadmap:
 
-## Architecture check
+## Проверка архитектуры
 
-- [ ] Business logic is not duplicated between Web and Telegram.
-- [ ] External providers are accessed through adapters/interfaces.
-- [ ] Module boundaries remain explicit.
-- [ ] This change does not introduce unnecessary service separation.
+- [ ] Бизнес-логика не дублируется между Web и Telegram.
+- [ ] Внешние провайдеры используются через адаптеры/интерфейсы.
+- [ ] Границы модулей остаются явными.
+- [ ] Изменение не создаёт ненужного разделения на отдельные сервисы.
 
-## Security check
+## Проверка безопасности
 
-- [ ] No secrets, tokens, private keys or production credentials are committed.
-- [ ] Authorization requirements are defined for infrastructure-changing actions.
-- [ ] Relevant audit events are considered.
-- [ ] Destructive operations have an appropriate confirmation/rollback strategy where applicable.
+- [ ] В репозиторий не добавлены секреты, токены, приватные ключи или production-учётные данные.
+- [ ] Для действий, изменяющих инфраструктуру, определены требования к авторизации.
+- [ ] Учтены необходимые события аудита.
+- [ ] Для разрушительных операций предусмотрено подходящее подтверждение и/или rollback, если это применимо.
 
-## Documentation
+## Документация
 
-- [ ] Product/architecture/security documentation is updated if behavior or boundaries changed.
+- [ ] Документация продукта, архитектуры и безопасности обновлена, если изменилось поведение или границы системы.
 
-## Testing / validation
+## Тестирование / проверка
 
-Describe how the change was validated.
+Опишите, как было проверено изменение.
