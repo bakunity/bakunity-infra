@@ -1,113 +1,113 @@
-# Security Model
+# Модель безопасности
 
-Bakunity Infra is intended to manage infrastructure-changing operations. Security is therefore a product requirement, not a later add-on.
+Bakunity Infra предназначена для управления операциями, которые изменяют инфраструктуру. Поэтому безопасность является базовым требованием продукта, а не дополнением на потом.
 
-## Security baseline
+## Базовые правила безопасности
 
-### Secrets never belong in Git
+### Секретам не место в Git
 
-Do not commit:
+Нельзя коммитить:
 
-- Telegram bot tokens;
+- токены Telegram-ботов;
 - Cloudflare API tokens;
-- database passwords;
-- SSH private keys;
-- application secret keys;
-- encryption keys;
-- production `.env` files;
-- exported provider credentials;
-- backup archives containing credentials.
+- пароли баз данных;
+- приватные SSH-ключи;
+- секретные ключи приложения;
+- ключи шифрования;
+- production `.env` файлы;
+- экспортированные учётные данные провайдеров;
+- резервные архивы, содержащие учётные данные.
 
-Repository examples may contain variable names only, never real values.
+Примеры в репозитории могут содержать только названия переменных, но не реальные значения.
 
-## Least privilege
+## Принцип минимальных привилегий
 
-Provider credentials should receive only the permissions necessary for Bakunity Infra to perform its intended operations.
+Учётные данные внешних провайдеров должны иметь только те права, которые действительно необходимы Bakunity Infra.
 
-Examples:
+Примеры:
 
-- DNS tokens should be limited to required zones and DNS permissions;
-- server credentials should not default to unrestricted root access;
-- application database users should have only required database privileges.
+- DNS-токены должны быть ограничены нужными зонами и DNS-разрешениями;
+- серверные учётные данные не должны по умолчанию давать неограниченный root-доступ;
+- пользователь базы данных приложения должен иметь только необходимые права.
 
-## Identity and authorization
+## Идентификация и авторизация
 
-Authorization must be enforced in backend/application logic rather than relying on hidden buttons or frontend routes.
+Проверка прав должна выполняться в backend/application logic, а не основываться только на скрытых кнопках или маршрутах frontend.
 
-The identity model should support:
+Модель идентификации должна поддерживать:
 
-- users;
-- roles;
-- permissions;
-- ownership of domains/resources;
-- administrative overrides where explicitly allowed;
-- source client information for important actions.
+- пользователей;
+- роли;
+- права;
+- владение доменами и другими ресурсами;
+- административные override там, где они явно разрешены;
+- информацию об исходном клиенте для важных действий.
 
-Telegram identity and Web identity should resolve to the same internal user model where appropriate.
+Telegram identity и Web identity при необходимости должны сопоставляться с одной внутренней моделью пользователя.
 
-## Audit trail
+## Журнал аудита
 
-Meaningful infrastructure mutations should generate audit events.
+Значимые изменения инфраструктуры должны создавать события аудита.
 
-Examples:
+Примеры:
 
-- domain created/deleted;
-- DNS record created/changed/deleted;
-- server added/changed/removed;
-- resource ownership changed;
-- role or permission changed;
-- deployment started or rolled back;
-- sensitive integration configuration changed.
+- домен создан или удалён;
+- DNS-запись создана, изменена или удалена;
+- сервер добавлен, изменён или удалён;
+- изменён владелец ресурса;
+- изменена роль или право доступа;
+- запущен деплой или rollback;
+- изменена чувствительная конфигурация интеграции.
 
-An audit event should be able to answer, where applicable:
+Событие аудита должно по возможности отвечать на вопросы:
 
-- who performed the action;
-- which client was used;
-- what resource changed;
-- when it happened;
-- whether it succeeded;
-- enough metadata to investigate the action without logging secrets.
+- кто выполнил действие;
+- через какой клиент оно было выполнено;
+- какой ресурс изменился;
+- когда это произошло;
+- успешно ли завершилось действие;
+- какие метаданные нужны для расследования без записи секретов в лог.
 
-## External provider boundaries
+## Границы внешних провайдеров
 
-Cloudflare and future providers must be accessed through controlled adapters.
+Cloudflare и будущие провайдеры должны использоваться только через контролируемые адаптеры.
 
-Provider errors must not expose secrets in Telegram messages, web responses or logs.
+Ошибки внешних провайдеров не должны раскрывать секреты в Telegram-сообщениях, веб-ответах или логах.
 
-## Server management
+## Управление серверами
 
-When remote server management is introduced, it must not begin as arbitrary remote shell execution from user input.
+Когда появится удалённое управление серверами, оно не должно начинаться с произвольного выполнения shell-команд из пользовательского ввода.
 
-Preferred direction:
+Предпочтительное направление:
 
-- explicit allowed operations;
-- dedicated service account;
-- key-based authentication;
-- narrow privilege elevation where required;
-- host identity verification;
-- operation timeouts;
-- audit events;
-- idempotent operations where possible;
-- rollback strategy for configuration changes.
+- чётко определённый набор разрешённых операций;
+- отдельная сервисная учётная запись;
+- аутентификация по ключам;
+- минимальное повышение привилегий только там, где это требуется;
+- проверка идентичности хоста;
+- таймауты операций;
+- события аудита;
+- идемпотентные операции там, где это возможно;
+- стратегия отката для изменений конфигурации.
 
-## Destructive operations
+## Разрушительные операции
 
-High-impact operations should require explicit confirmation and should be designed to minimize accidental removal.
+Операции с высоким риском должны требовать явного подтверждения и проектироваться так, чтобы минимизировать случайное удаление.
 
-Examples include deleting a managed domain, removing DNS records used in production, deleting a server, or replacing routing configuration.
+Примеры: удаление управляемого домена, удаление важных production DNS-записей, удаление сервера или замена конфигурации маршрутизации.
 
-## Logging
+## Логирование
 
-Logs must avoid secret values and sensitive credential material.
+Логи не должны содержать значения секретов и чувствительный материал учётных данных.
 
-Structured logs should include correlation/request identifiers where useful so that Web, Telegram, API and provider actions can be traced across a single operation.
+Структурированные логи должны при необходимости содержать correlation/request ID, чтобы действия Web, Telegram, API и внешнего провайдера можно было связать в рамках одной операции.
 
-## Backups
+## Резервные копии
 
-Before the system manages production infrastructure, backup and recovery procedures must exist for its own persistent state.
+До начала управления production-инфраструктурой должны существовать процедуры резервного копирования и восстановления собственного постоянного состояния Bakunity Infra.
 
-Backups must be protected at least as carefully as the primary database because they can contain infrastructure metadata and encrypted secrets.
+Резервные копии должны защищаться не слабее основной базы, поскольку они могут содержать инфраструктурные метаданные и зашифрованные секреты.
 
-## Security before automation
+## Безопасность раньше автоматизации
 
-The first DNS/domain phase intentionally avoids broad SSH automation. Remote provisioning, proxy changes and deployment automation should be added only after authorization, auditing, credential storage and rollback foundations are established.
+Первый этап с DNS и доменами намеренно не включает широкую SSH-автоматизацию. Удалённая настройка серверов, изменения proxy и автоматические деплои должны добавляться только после появления надёжной основы авторизации, аудита, хранения учётных данных и rollback.
