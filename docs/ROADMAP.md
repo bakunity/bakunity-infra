@@ -1,120 +1,120 @@
-# Roadmap
+# План развития
 
-This roadmap describes product stages, not delivery dates.
+Этот roadmap описывает этапы продукта, а не конкретные сроки реализации.
 
-## Phase 0 — Foundation and design
+## Этап 0 — Основа и проектирование
 
-**Status: current**
+**Статус: текущий**
 
-Goals:
+Цели:
 
-- define product scope;
-- define modular-monolith boundaries;
-- define Web + Telegram as equal clients of one application core;
-- document security expectations;
-- define the first release boundary;
-- avoid implementation before the architecture is clear enough.
+- определить границы продукта;
+- определить границы модульного монолита;
+- зафиксировать Web и Telegram как равноправные клиенты одного ядра приложения;
+- описать требования к безопасности;
+- определить границы первой версии;
+- не начинать реализацию до достаточной ясности архитектуры.
 
-Deliverables:
+Результаты этапа:
 
-- project README;
-- product definition;
-- architecture document;
-- security document;
-- contribution rules;
-- initial backlog before coding starts.
+- README проекта;
+- описание продукта;
+- архитектурный документ;
+- документ по безопасности;
+- правила разработки;
+- первоначальный backlog до начала кодинга.
 
-## Phase 1 — DNS and domains
+## Этап 1 — DNS и домены
 
-Goal: make domain and DNS operations fully manageable through Bakunity Infra.
+Цель: сделать управление доменами и DNS полностью доступным через Bakunity Infra.
 
-Planned capabilities:
+Планируемые возможности:
 
-- managed DNS zones;
-- subdomain creation;
-- A records;
-- AAAA records;
-- CNAME records;
-- TXT records;
-- MX records;
-- NS records;
-- editing and deleting records;
-- ownership and per-user limits;
-- Cloudflare provider integration;
-- audit trail;
-- Telegram workflows;
-- corresponding Web Console workflows.
+- управляемые DNS-зоны;
+- создание поддоменов;
+- A-записи;
+- AAAA-записи;
+- CNAME-записи;
+- TXT-записи;
+- MX-записи;
+- NS-записи;
+- редактирование и удаление записей;
+- владение ресурсами и пользовательские лимиты;
+- интеграция с Cloudflare;
+- журнал аудита;
+- сценарии в Telegram;
+- соответствующие сценарии в веб-панели.
 
-Telegram can be ahead in UX delivery, but both clients must use the same backend logic.
+Telegram может быть впереди по скорости реализации UX, но оба клиента должны использовать одну backend-логику.
 
-## Phase 2 — Server inventory
+## Этап 2 — Каталог серверов
 
-Goal: connect DNS concepts to managed infrastructure without yet automating remote configuration.
+Цель: связать DNS с управляемой инфраструктурой, пока без автоматической удалённой настройки серверов.
 
-Planned capabilities:
+Планируемые возможности:
 
-- server catalog;
-- IPv4/IPv6 metadata;
-- labels and environment metadata;
-- basic reachability/status information;
-- attach domain/subdomain to a server;
-- display domain-to-server relationships;
-- permissions around server management.
+- каталог серверов;
+- метаданные IPv4/IPv6;
+- метки и данные окружения;
+- базовая информация о доступности и статусе;
+- привязка домена или поддомена к серверу;
+- отображение связей домен → сервер;
+- права на управление серверами.
 
-## Phase 3 — Routing and HTTPS
+## Этап 3 — Маршрутизация и HTTPS
 
-Goal: move from DNS management to application delivery.
+Цель: перейти от управления DNS к доставке приложений.
 
-Planned capabilities:
+Планируемые возможности:
 
-- reverse-proxy abstraction;
-- domain + server + target port mapping;
-- managed routing configuration;
-- TLS certificate issuance and renewal;
-- deployment validation;
+- абстракция reverse proxy;
+- связка домен + сервер + целевой порт;
+- управляемая конфигурация маршрутизации;
+- выпуск и продление TLS-сертификатов;
+- проверка конфигурации после изменений;
 - health checks;
-- safe rollback model.
+- безопасная модель отката.
 
-## Phase 4 — Deployments
+## Этап 4 — Деплои
 
-Goal: provide repeatable application deployment workflows.
+Цель: создать воспроизводимые сценарии развёртывания приложений.
 
-Possible capabilities:
+Возможные возможности:
 
-- deployment records;
-- environment configuration references;
-- container-aware deployment workflows;
-- deployment history;
+- записи о деплоях;
+- ссылки на конфигурацию окружения;
+- сценарии развёртывания с поддержкой контейнеров;
+- история деплоев;
 - rollback;
-- status and health reporting.
+- статусы и health reporting.
 
-Exact deployment technology should be selected only after requirements are validated.
+Конкретную технологию деплоя следует выбирать только после уточнения реальных требований.
 
-## Phase 5 — Monitoring and operations
+## Этап 5 — Мониторинг и эксплуатация
 
-Goal: turn Bakunity Infra into a broader infrastructure operations surface.
+Цель: развить Bakunity Infra в более широкую операционную платформу для инфраструктуры.
 
-Possible capabilities:
+Возможные возможности:
 
-- server and endpoint monitoring;
-- certificate expiration visibility;
-- DNS validation;
-- availability history;
-- incident notifications;
-- operational summaries in Telegram;
-- richer dashboard in Web Console.
+- мониторинг серверов и endpoint;
+- контроль срока действия сертификатов;
+- проверка DNS;
+- история доступности;
+- уведомления об инцидентах;
+- операционные сводки в Telegram;
+- расширенный dashboard в веб-панели.
 
-## Phase 6 — Platform capabilities
+## Этап 6 — Платформенные возможности
 
-Only when justified by actual usage:
+Только при реальной необходимости:
 
 - CLI;
-- external API clients;
-- additional DNS providers;
-- multi-region infrastructure;
-- background workers or queues;
-- extraction of high-load modules into separate services.
+- внешние API-клиенты;
+- дополнительные DNS-провайдеры;
+- multi-region инфраструктура;
+- background workers или очереди;
+- выделение высоконагруженных модулей в отдельные сервисы.
 
-## Explicit non-goal
+## Явная не-цель
 
-The project should not become microservices simply because it contains multiple modules. Service extraction requires a concrete operational or scaling reason.
+Проект не должен превращаться в микросервисы только потому, что внутри него много модулей. Выделение отдельного сервиса требует конкретной операционной причины или необходимости масштабирования.
