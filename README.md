@@ -133,6 +133,7 @@ This structure is a target architecture, not an indication that implementation h
 
 - [Product definition](docs/PRODUCT.md)
 - [Architecture](docs/ARCHITECTURE.md)
+- [Architecture decisions](docs/DECISIONS.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Security model](docs/SECURITY.md)
 - [Contributing](CONTRIBUTING.md)
