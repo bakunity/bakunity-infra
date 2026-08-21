@@ -1,103 +1,103 @@
-# Product Definition
+# Описание продукта
 
-## What Bakunity Infra is
+## Что такое Bakunity Infra
 
-Bakunity Infra is an infrastructure control plane for managing domains, DNS, servers and, later, application delivery.
+Bakunity Infra — это control plane для управления доменами, DNS, серверами и, в дальнейшем, доставкой приложений.
 
-The system is designed around one application core with multiple clients:
+Система строится вокруг одного общего ядра с несколькими клиентами:
 
-- Web Console;
-- Telegram Bot;
+- веб-панель;
+- Telegram-бот;
 - REST API;
-- possible CLI in the future.
+- в будущем возможен CLI.
 
-The product goal is to turn routine infrastructure operations into clear, guided actions instead of requiring users to work directly with DNS provider dashboards, server configuration files and command-line tooling for every change.
+Цель продукта — превратить рутинные инфраструктурные операции в понятные пошаговые действия, чтобы пользователю не приходилось для каждого изменения вручную работать с панелями DNS-провайдеров, конфигурационными файлами серверов и командной строкой.
 
-## Primary use case
+## Основной сценарий
 
-A user wants to create a new subdomain and point it to infrastructure.
+Пользователь хочет создать новый поддомен и направить его на инфраструктуру.
 
-Expected flow:
+Ожидаемый сценарий:
 
-1. Choose a managed DNS zone.
-2. Enter a subdomain name.
-3. Choose a target server, IP address or CNAME.
-4. Confirm the action.
-5. Bakunity Infra creates and stores the requested configuration.
-6. The result is visible from both Telegram and the Web Console.
+1. Выбрать управляемую DNS-зону.
+2. Ввести имя поддомена.
+3. Выбрать целевой сервер, IP-адрес или CNAME.
+4. Подтвердить действие.
+5. Bakunity Infra создаёт и сохраняет требуемую конфигурацию.
+6. Результат становится доступен и в Telegram, и в веб-панели.
 
-## Product surfaces
+## Интерфейсы продукта
 
-### Telegram Bot
+### Telegram-бот
 
-The fastest operational client. It should be optimized for short workflows such as:
+Самый быстрый операционный клиент. Он должен быть оптимизирован для коротких сценариев:
 
-- creating a subdomain;
-- viewing owned domains;
-- managing common DNS records;
-- attaching a domain to a server;
-- checking status;
-- reviewing recent infrastructure actions.
+- создание поддомена;
+- просмотр своих доменов;
+- управление основными DNS-записями;
+- привязка домена к серверу;
+- проверка статуса;
+- просмотр последних инфраструктурных действий.
 
-### Web Console
+### Веб-панель
 
-The primary full-featured management interface. It should be better suited for:
+Основной полнофункциональный интерфейс управления. Он лучше подходит для:
 
-- browsing many zones and domains;
-- managing DNS records in detail;
-- server inventory;
-- deployments;
-- monitoring;
-- audit history;
-- user and permission management;
-- advanced settings.
+- просмотра большого количества зон и доменов;
+- детального управления DNS-записями;
+- каталога серверов;
+- деплоев;
+- мониторинга;
+- истории аудита;
+- управления пользователями и правами;
+- расширенных настроек.
 
 ### REST API
 
-A stable interface for programmatic access and future integrations.
+Стабильный программный интерфейс для внешнего доступа и будущих интеграций.
 
-## First product boundary
+## Граница первой версии
 
-The first usable release focuses on domain and DNS management plus a server catalog.
+Первая рабочая версия сосредоточена на управлении доменами и DNS, а также на каталоге серверов.
 
-Included:
+Входит в первую версию:
 
-- multiple DNS zones;
-- subdomain lifecycle;
-- A, AAAA, CNAME, TXT, MX and NS records;
-- DNS record editing and deletion;
-- domain ownership and limits;
-- server inventory;
-- linking a domain/subdomain to a server;
-- roles and access control;
-- audit events;
-- Telegram and Web clients using the same application logic.
+- несколько DNS-зон;
+- полный жизненный цикл поддоменов;
+- записи A, AAAA, CNAME, TXT, MX и NS;
+- редактирование и удаление DNS-записей;
+- владение доменами и лимиты;
+- каталог серверов;
+- привязка домена или поддомена к серверу;
+- роли и контроль доступа;
+- события аудита;
+- Telegram и Web используют одну и ту же бизнес-логику приложения.
 
-Not included in the first release:
+Не входит в первую версию:
 
-- arbitrary remote shell access;
-- automatic server provisioning;
-- automatic reverse proxy configuration;
-- automatic TLS issuance;
-- application deployment;
-- full monitoring platform;
-- multi-region orchestration.
+- произвольный удалённый shell-доступ;
+- автоматическая подготовка серверов;
+- автоматическая настройка reverse proxy;
+- автоматический выпуск TLS-сертификатов;
+- деплой приложений;
+- полноценная платформа мониторинга;
+- мульти-региональная оркестрация.
 
-These are planned later, after the DNS/domain foundation is stable.
+Эти возможности планируются позже, после стабилизации основы доменов и DNS.
 
-## Product principles
+## Принципы продукта
 
-- Simple for routine operations.
-- Safe by default for infrastructure-changing actions.
-- The same state is visible from every client.
-- No provider-specific concepts should leak unnecessarily into the user experience.
-- Every significant mutation should be auditable.
-- Advanced capabilities should not make simple workflows harder.
+- Простота для повседневных операций.
+- Безопасные настройки по умолчанию для действий, меняющих инфраструктуру.
+- Одинаковое состояние системы во всех клиентах.
+- Специфика конкретного провайдера не должна без необходимости попадать в пользовательский интерфейс.
+- Каждое значимое изменение должно быть доступно для аудита.
+- Расширенные возможности не должны усложнять простые сценарии.
 
-## Naming
+## Именование
 
-Repository: `bakunity/bakunity-infra`
+Репозиторий: `bakunity/bakunity-infra`
 
-Product name: **Bakunity Infra**
+Название продукта: **Bakunity Infra**
 
-Long-form description: **Bakunity Infrastructure Control Plane**
+Полное описание: **Bakunity Infrastructure Control Plane**
