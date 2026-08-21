@@ -1,68 +1,68 @@
-# Architecture Decision Log
+# Журнал архитектурных решений
 
-This file records project-level decisions that should not be changed casually during implementation.
+Этот файл фиксирует решения уровня проекта, которые не следует менять случайно во время реализации.
 
-## ADR-001 — Modular monolith
+## ADR-001 — Модульный монолит
 
-**Status:** Accepted
+**Статус:** Принято
 
-Bakunity Infra starts as a modular monolith rather than microservices.
+Bakunity Infra начинается как модульный монолит, а не как набор микросервисов.
 
-Reasons:
+Причины:
 
-- the product is early-stage;
-- modules need strong boundaries but not distributed-system overhead;
-- one repository and one primary deployment make iteration easier;
-- individual modules can be extracted later if real scaling or isolation needs appear.
+- продукт находится на раннем этапе;
+- модулям нужны строгие границы, но не накладные расходы распределённой системы;
+- один репозиторий и один основной деплой упрощают развитие;
+- отдельные модули можно вынести позже, если появится реальная потребность в масштабировании или изоляции.
 
-## ADR-002 — Web and Telegram are clients of one core
+## ADR-002 — Web и Telegram являются клиентами одного ядра
 
-**Status:** Accepted
+**Статус:** Принято
 
-The Web Console and Telegram Bot are separate user interfaces over the same application logic and source of truth.
+Веб-панель и Telegram-бот — отдельные пользовательские интерфейсы поверх одной бизнес-логики и одного источника истины.
 
-Business rules must not be independently reimplemented in each client.
+Бизнес-правила не должны независимо реализовываться в каждом клиенте.
 
-Telegram is expected to be faster to iterate on, but it is not the architectural center of the product.
+Telegram, вероятно, будет развиваться быстрее с точки зрения UX, но он не является архитектурным центром продукта.
 
-## ADR-003 — REST API is a first-class boundary
+## ADR-003 — REST API является полноценной границей системы
 
-**Status:** Accepted
+**Статус:** Принято
 
-The system should expose a stable REST API for the Web Console and future integrations.
+Система должна предоставлять стабильный REST API для веб-панели и будущих интеграций.
 
-The API is not a replacement for the application layer; it is one interface into it.
+API не заменяет application layer — это один из интерфейсов доступа к нему.
 
-## ADR-004 — Provider-neutral DNS core
+## ADR-004 — DNS-ядро не зависит от конкретного провайдера
 
-**Status:** Accepted
+**Статус:** Принято
 
-Cloudflare is the first DNS provider, but DNS business logic must not depend permanently on Cloudflare-specific APIs or data shapes.
+Cloudflare — первый DNS-провайдер, но бизнес-логика DNS не должна навсегда зависеть от Cloudflare API или его форматов данных.
 
-A provider interface/adaptor boundary should make additional DNS providers possible later.
+Граница интерфейса/адаптера провайдера должна позволить позже подключать дополнительные DNS-провайдеры.
 
-## ADR-005 — PostgreSQL as the initial source of truth
+## ADR-005 — PostgreSQL как первоначальный источник истины
 
-**Status:** Accepted in principle
+**Статус:** Принято в качестве направления
 
-Bakunity Infra should maintain its own persistent model for users, zones, domains, records, servers, relationships and audit events rather than treating an external DNS provider as the product database.
+Bakunity Infra должна хранить собственную модель пользователей, зон, доменов, записей, серверов, связей и событий аудита, а не использовать внешний DNS-провайдер как базу данных продукта.
 
-PostgreSQL is the planned initial persistent store.
+Первым постоянным хранилищем планируется PostgreSQL.
 
-## ADR-006 — Infrastructure automation follows security foundations
+## ADR-006 — Автоматизация инфраструктуры только после основ безопасности
 
-**Status:** Accepted
+**Статус:** Принято
 
-Broad SSH automation, reverse-proxy mutation and automated deployment are intentionally deferred until identity, authorization, auditing, credential handling and rollback principles are established.
+Широкая SSH-автоматизация, изменение reverse proxy и автоматический деплой намеренно откладываются до того момента, когда будут определены identity, авторизация, аудит, работа с учётными данными и принципы отката.
 
-## ADR-007 — No premature service extraction
+## ADR-007 — Никаких преждевременных микросервисов
 
-**Status:** Accepted
+**Статус:** Принято
 
-A module may become an independent service only when there is a concrete reason such as workload characteristics, scaling pressure, fault isolation or operational ownership.
+Модуль может стать отдельным сервисом только при наличии конкретной причины: особенности нагрузки, требования масштабирования, fault isolation или отдельная операционная ответственность.
 
-Module count alone is not a reason to create microservices.
+Само количество модулей не является причиной создавать микросервисы.
 
 ---
 
-Future architecture decisions should be appended with a new ADR number, status, context and consequences rather than silently rewriting accepted assumptions.
+Новые архитектурные решения следует добавлять новым ADR с отдельным номером, статусом, контекстом и последствиями, а не незаметно переписывать уже принятые предположения.
