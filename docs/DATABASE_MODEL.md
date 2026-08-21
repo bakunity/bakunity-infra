@@ -87,16 +87,20 @@ PRIMARY KEY(role_id, permission_id)
 
 ### user_roles
 
+Назначение роли пользователю глобально или в определённом scope.
+
 ```text
+id UUID PK
 user_id UUID FK -> users.id
 role_id UUID FK -> roles.id
 scope_type TEXT NULL
 scope_id UUID NULL
 created_at TIMESTAMPTZ
-PRIMARY KEY(user_id, role_id, scope_type, scope_id)
 ```
 
-`scope_*` позволяет позже назначать роль не только глобально, но и на конкретный ресурс или область.
+Важно: `scope_type/scope_id` намеренно **не входят в PRIMARY KEY**, потому что global assignment использует NULL. Уникальность назначения роли задаётся отдельным constraint/index с корректной семантикой global/scoped assignment при первой миграции.
+
+`scope_*` позволяет назначать роль не только глобально, но и на конкретную область, например DNS-зону или другой ресурс.
 
 ## DNS
 
@@ -196,6 +200,12 @@ error
 deleting
 ```
 
+### Domain-level и zone-level records
+
+В обычном пользовательском V1 flow DNS-запись относится к конкретному `Domain Resource`.
+
+`domain_id = NULL` резервируется для административных zone-level/apex/system records. Такие записи должны иметь отдельные permissions/API flow и не должны случайно попадать в интерфейс «Мои домены».
+
 ## Серверы
 
 ### servers
@@ -215,6 +225,16 @@ created_at TIMESTAMPTZ
 updated_at TIMESTAMPTZ
 deleted_at TIMESTAMPTZ NULL
 ```
+
+В V1 `status` — состояние регистрации ресурса control plane, например:
+
+```text
+active
+disabled
+archived
+```
+
+Это **не** health/online status. Reachability и monitoring добавляются отдельным состоянием на соответствующем этапе roadmap.
 
 На первом этапе таблица не должна содержать SSH private key.
 
@@ -244,7 +264,7 @@ deployment
 load_balancer
 ```
 
-Для первой версии желательно обеспечить одну активную основную привязку домена, если продуктовый сценарий не требует нескольких серверов.
+Для V1 желательно обеспечить одну активную основную привязку домена, если продуктовый сценарий не требует нескольких серверов.
 
 ## Аудит
 
@@ -323,22 +343,31 @@ roles
        ├── domains
        │     ├── dns_records
        │     └── domain_bindings ──> servers
-       └── dns_records
+       └── zone-level dns_records
 
 audit_events
  └── ссылки на actor и изменённый ресурс
 ```
 
-## Удаление данных
+## Удаление данных и provider state
 
-Для инфраструктурных сущностей предпочтительно различать:
+Для инфраструктурных сущностей различаем:
 
-- удаление в Bakunity Infra;
-- удаление во внешнем provider;
+- внутреннее состояние Bakunity Infra;
+- подтверждённое состояние внешнего provider;
 - soft delete для истории;
 - окончательную очистку при необходимости.
 
-Нельзя помечать ресурс успешно удалённым до получения определённого результата от provider или постановки операции в гарантированную очередь обработки.
+В V1 ресурс нельзя считать успешно удалённым, пока provider не подтвердил соответствующую операцию.
+
+Если provider недоступен или результат неопределён:
+
+- ресурс остаётся в явном `error/deleting/pending` состоянии;
+- пользователю возвращается безопасный error code;
+- операция может быть повторена через retry/reconciliation flow;
+- наличие message queue не является обязательным требованием V1.
+
+Queue/worker добавляются только если это реально требуется для надёжности или масштаба.
 
 ## Конкурентные изменения
 
@@ -348,9 +377,10 @@ audit_events
 
 - `updated_at` + optimistic concurrency;
 - version column;
+- ETag/version contract;
 - транзакционные блокировки для критических операций.
 
-Конкретный механизм фиксируется при реализации persistence layer.
+Конкретный механизм фиксируется отдельным решением до реализации write endpoint.
 
 ## Что не хранить в таблицах открытым текстом
 
