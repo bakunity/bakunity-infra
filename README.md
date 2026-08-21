@@ -1,41 +1,41 @@
 # Bakunity Infra
 
-> Infrastructure control plane for domains, DNS, servers and application delivery.
+> Платформа управления инфраструктурой для доменов, DNS, серверов и доставки приложений.
 
-**Status:** Planning / architecture  
-**Architecture:** Modular Monolith  
-**Interfaces:** Web Console, Telegram Bot, REST API
+**Статус:** Планирование / архитектура  
+**Архитектура:** Модульный монолит  
+**Интерфейсы:** Веб-панель, Telegram-бот, REST API
 
-Bakunity Infra is a single infrastructure management system designed to make routine domain and server operations simple from both a web interface and Telegram.
+Bakunity Infra — единая система управления инфраструктурой, которая должна упростить повседневные операции с доменами и серверами как через веб-интерфейс, так и через Telegram.
 
-The project starts with domain and DNS management and is designed to grow into a broader control plane for servers, reverse proxy, TLS certificates, deployments, monitoring and audit.
+Проект начинается с управления доменами и DNS, а затем будет развиваться в полноценный control plane для серверов, reverse proxy, TLS-сертификатов, деплоев, мониторинга и аудита.
 
-## Product idea
+## Идея продукта
 
-A user should be able to create a subdomain, attach it to a server and manage its DNS without manually opening a registrar or DNS provider dashboard.
+Пользователь должен иметь возможность создать поддомен, привязать его к серверу и управлять DNS без ручного входа в панели регистратора или DNS-провайдера.
 
 ```text
-Web Console / Telegram
+Веб-панель / Telegram
           │
           ▼
       Bakunity Infra
           │
     ┌─────┼───────────┐
     ▼     ▼           ▼
- Domains  DNS       Servers
+ Домены   DNS       Серверы
           │
           ▼
-     DNS Provider
+     DNS-провайдер
 ```
 
-Later the same control plane can also manage application routing and delivery:
+Позже тот же control plane сможет управлять маршрутизацией и доставкой приложений:
 
 ```text
-subdomain
+поддомен
    +
-server
+сервер
    +
-target port
+целевой порт
    │
    ▼
 reverse proxy
@@ -47,63 +47,63 @@ TLS / HTTPS
 health check
 ```
 
-## Interfaces
+## Интерфейсы
 
-Bakunity Infra is not a Telegram-only bot. Telegram and the website are two clients of the same application core.
+Bakunity Infra — не просто Telegram-бот. Telegram и веб-панель являются двумя клиентами одного общего ядра системы.
 
-- **Web Console** — full management interface.
-- **Telegram Bot** — fast operational interface for common actions.
-- **REST API** — programmatic interface and boundary for external integrations.
-- **CLI** — possible future client.
+- **Веб-панель** — полноценный интерфейс управления.
+- **Telegram-бот** — быстрый операционный интерфейс для частых действий.
+- **REST API** — программный интерфейс и граница для внешних интеграций.
+- **CLI** — возможный клиент в будущем.
 
-Telegram is expected to reach usable functionality first because it is faster to iterate on, while the web console is developed against the same backend and domain model.
+Ожидается, что Telegram первым получит рабочий функционал, потому что его быстрее разрабатывать и тестировать. Веб-панель при этом строится поверх того же backend и той же доменной модели.
 
-## Core modules
+## Основные модули
 
-The planned modular monolith is divided by business capability rather than by generic technical folders.
+Планируемый модульный монолит разделяется по бизнес-возможностям, а не по общим техническим папкам.
 
-- Identity & Access
-- Domains
+- Identity & Access — пользователи и доступ
+- Domains — домены и поддомены
 - DNS
-- Servers
-- Deployments
+- Servers — серверы
+- Deployments — деплои
 - Proxy
-- Certificates
-- Monitoring
-- Audit
+- Certificates — сертификаты
+- Monitoring — мониторинг
+- Audit — аудит действий
 
-External systems are connected through adapters so that, for example, the DNS module does not depend directly on one provider forever.
+Внешние системы подключаются через адаптеры, поэтому DNS-модуль не должен навсегда зависеть от одного конкретного провайдера.
 
-Initial DNS provider: **Cloudflare**.
+Первый DNS-провайдер: **Cloudflare**.
 
-## Architecture principles
+## Архитектурные принципы
 
-1. **Modular monolith first.** One codebase and deployment boundary, with strict internal module boundaries.
-2. **One application core, multiple clients.** Telegram and Web reuse the same use cases and authorization model.
-3. **Provider abstraction.** Cloudflare, SSH, proxy engines and other external systems are adapters, not business logic.
-4. **API-first boundaries.** External clients interact through stable application/API contracts.
-5. **Auditability.** Infrastructure-changing actions should be attributable to a user and source client.
-6. **No secrets in Git.** Tokens, credentials and private keys never belong in the repository.
-7. **Grow by extraction, not premature microservices.** A module becomes a separate service only when there is a real scaling or isolation reason.
+1. **Сначала модульный монолит.** Одна кодовая база и одна основная граница деплоя, но строгие внутренние границы между модулями.
+2. **Одно ядро приложения, несколько клиентов.** Telegram и Web используют одни и те же use case и модель авторизации.
+3. **Абстракция провайдеров.** Cloudflare, SSH, proxy-движки и другие внешние системы являются адаптерами, а не частью бизнес-логики.
+4. **Стабильные API-контракты.** Внешние клиенты работают через определённые контракты приложения и API.
+5. **Аудит действий.** Изменения инфраструктуры должны быть привязаны к пользователю и источнику действия.
+6. **Никаких секретов в Git.** Токены, учётные данные и приватные ключи не хранятся в репозитории.
+7. **Рост через выделение модулей, а не через преждевременные микросервисы.** Модуль становится отдельным сервисом только при реальной необходимости в масштабировании или изоляции.
 
-## Initial scope
+## Первая версия
 
-The first usable version focuses on DNS and domain operations:
+Первая рабочая версия сосредоточена на доменах и DNS:
 
-- multiple managed DNS zones;
-- subdomain creation;
-- A, AAAA, CNAME, TXT, MX and NS records;
-- record editing and deletion;
-- domain ownership inside Bakunity Infra;
-- server catalog;
-- attaching a domain/subdomain to a server;
-- roles and limits;
-- audit log;
-- both Telegram and Web clients using the same backend logic.
+- несколько управляемых DNS-зон;
+- создание поддоменов;
+- записи A, AAAA, CNAME, TXT, MX и NS;
+- редактирование и удаление записей;
+- владение доменами внутри Bakunity Infra;
+- каталог серверов;
+- привязка домена или поддомена к серверу;
+- роли и лимиты;
+- журнал аудита;
+- Telegram и Web используют одну backend-логику.
 
-Automatic SSH provisioning, reverse proxy configuration, TLS issuance and application deployment are intentionally deferred until the DNS/domain foundation is stable.
+Автоматическая настройка серверов по SSH, reverse proxy, выпуск TLS-сертификатов и деплой приложений намеренно откладываются до стабилизации базового слоя доменов и DNS.
 
-## Planned repository shape
+## Планируемая структура репозитория
 
 ```text
 bakunity-infra/
@@ -127,19 +127,19 @@ bakunity-infra/
 └── tests/
 ```
 
-This structure is a target architecture, not an indication that implementation has started.
+Эта структура является целевой архитектурой и не означает, что разработка уже началась.
 
-## Documentation
+## Документация
 
-- [Product definition](docs/PRODUCT.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Architecture decisions](docs/DECISIONS.md)
-- [Roadmap](docs/ROADMAP.md)
-- [Security model](docs/SECURITY.md)
-- [Contributing](CONTRIBUTING.md)
+- [Описание продукта](docs/PRODUCT.md)
+- [Архитектура](docs/ARCHITECTURE.md)
+- [Архитектурные решения](docs/DECISIONS.md)
+- [План развития](docs/ROADMAP.md)
+- [Модель безопасности](docs/SECURITY.md)
+- [Правила разработки](CONTRIBUTING.md)
 
-## Current phase
+## Текущий этап
 
-The repository is currently in the **planning and architecture phase**. The goal of this phase is to define clear boundaries before implementation begins.
+Репозиторий сейчас находится на этапе **планирования и проектирования архитектуры**. Цель этого этапа — определить границы системы до начала реализации.
 
-No production credentials, server keys or DNS-provider secrets should ever be committed here.
+Продакшен-учётные данные, серверные ключи и секреты DNS-провайдеров никогда не должны попадать в этот репозиторий.
