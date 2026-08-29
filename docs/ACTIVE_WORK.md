@@ -1,6 +1,6 @@
 # Активная работа
 
-**Статус:** BI-0101 scaffold реализован в рабочей ветке; требуется PR и CI verification.  
+**Статус:** BI-0101 scaffold реализован в PR #6; выполняется CI verification.  
 **Обновлено:** 2026-08-29
 
 Этот файл отвечает только на вопрос: **что делается прямо сейчас и что является следующим конкретным шагом**.
@@ -11,12 +11,12 @@
 BI-0101 — Repository scaffold
 Issue: #5
 Branch: bi-0101-repository-scaffold
-PR: ещё не открыт
+PR: #6
 Base commit: 0095bb7c73027f6e619959d85c9c4472cd025d29
 Runtime scope: repository/local/CI only
 ```
 
-## Что уже реализовано в ветке
+## Что реализовано
 
 Минимальный scaffold создан без фиктивной реализации будущих модулей:
 
@@ -71,7 +71,7 @@ BI-0101 не содержит:
 - [x] config foundation создан без committed secrets;
 - [x] product-code CI workflow добавлен;
 - [x] local development guide добавлен;
-- [ ] PR открыт;
+- [x] PR #6 открыт;
 - [ ] `ruff check` PASS в CI;
 - [ ] compile/import check PASS в CI;
 - [ ] `pytest` PASS в CI;
@@ -95,9 +95,8 @@ BI-0101 не содержит:
 
 ## Следующий безопасный шаг
 
-1. Открыть PR BI-0101.
-2. Запустить Product CI и PCS Context Check.
-3. Исправить только реальные проблемы scaffold/CI.
-4. После зелёного финального HEAD — merge.
-5. Post-merge PCS reconcile.
-6. Следующая задача backlog: `BI-0102 — Конфигурация приложения`.
+1. Дождаться Product CI и PCS Context Check на финальном PR HEAD.
+2. Если есть реальные ошибки — исправить scaffold/CI и повторить проверки.
+3. Если оба workflow зелёные — merge PR #6.
+4. Post-merge PCS reconcile.
+5. Следующая задача backlog: `BI-0102 — Конфигурация приложения`.
