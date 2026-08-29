@@ -1,6 +1,6 @@
 # Активная работа
 
-**Статус:** BI-0102 implementation готова в рабочей ветке; PR/CI ещё не выполнены.  
+**Статус:** BI-0102 implementation находится в PR #8; выполняется Product CI + PCS verification.  
 **Обновлено:** 2026-08-29
 
 Этот файл отвечает только на вопрос: **что делается прямо сейчас и что является следующим конкретным шагом**.
@@ -11,7 +11,7 @@
 BI-0102 — Конфигурация приложения, logging и correlation ID
 Issue: #7
 Branch: bi-0102-application-configuration
-PR: ещё не открыт
+PR: #8
 Base commit: f00fc1f03a134ae358458e7e18fa822527c6795a
 Runtime scope: repository/local/CI only
 ```
@@ -20,7 +20,7 @@ Runtime scope: repository/local/CI only
 
 ### Typed configuration
 
-`infrastructure/config.py` теперь определяет:
+`infrastructure/config.py`:
 
 ```text
 AppEnvironment:
@@ -36,22 +36,22 @@ AppEnvironment:
 - bounded app name/request ID header settings;
 - `is_production_like` helper;
 - `SecretStr` для Telegram token;
-- прежний `BAKUNITY_` environment prefix сохранён.
+- `BAKUNITY_` environment prefix сохранён.
 
 ### Structured logging
 
-Добавлен `infrastructure/observability.py`:
+`infrastructure/observability.py`:
 
 - stdlib JSON formatter;
 - service/environment context;
 - ContextVar request ID;
 - безопасная нормализация входящего request ID;
-- UUID-based generation при отсутствии/невалидном значении;
+- UUID generation при отсутствии/невалидном значении;
 - общий `configure_logging()` для API и Telegram process.
 
 ### HTTP correlation
 
-Добавлен `apps/api/middleware.py`:
+`apps/api/middleware.py`:
 
 ```text
 incoming X-Request-ID
@@ -67,23 +67,20 @@ Request ID — correlation metadata, не authentication/identity/permission.
 
 ### Tests
 
-Добавлены/расширены tests для:
+Покрываются:
 
-- `/health` и автоматически созданного request ID;
-- сохранения безопасного client request ID;
-- замены unsafe request ID;
+- `/health` + generated request ID;
+- safe client request ID preservation;
+- unsafe request ID replacement;
 - typed environment parsing;
 - log-level normalization;
 - invalid environment rejection;
-- SecretStr redaction from settings repr;
-- JSON log formatter correlation context.
+- SecretStr redaction in settings repr;
+- JSON log formatter request context.
 
 ### Docs/config sample
 
-Обновлены:
-
-- `.env.example`;
-- `docs/DEVELOPMENT.md`.
+Обновлены `.env.example` и `docs/DEVELOPMENT.md`.
 
 ## Что BI-0102 намеренно НЕ делает
 
@@ -105,7 +102,7 @@ Request ID — correlation metadata, не authentication/identity/permission.
 - [x] `/health` contract сохранён;
 - [x] tests добавлены;
 - [x] docs/.env example reconciled;
-- [ ] PR открыт;
+- [x] PR #8 открыт;
 - [ ] Ruff PASS;
 - [ ] compile PASS;
 - [ ] pytest PASS;
@@ -122,4 +119,4 @@ Request ID — correlation metadata, не authentication/identity/permission.
 
 ## Следующий безопасный шаг
 
-Открыть PR BI-0102, получить Product CI + PCS checks и исправить только подтверждённые проблемы.
+Получить Product CI + PCS checks на PR #8; исправлять только подтверждённые проблемы реализации/контекста.
