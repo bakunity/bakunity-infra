@@ -2,7 +2,7 @@
 
 **Статус знания:** CONFIRMED  
 **Последняя сверка:** 2026-08-29  
-**Фаза:** старт реализации V1; активная задача BI-0101 repository scaffold.
+**Фаза:** старт реализации V1; BI-0101 scaffold реализован и проверен в PR #6.
 
 Этот документ отвечает только на вопрос: **что истинно о Bakunity Infra прямо сейчас**.
 
@@ -10,46 +10,81 @@
 
 ## Что существует сейчас
 
-- Репозиторий проекта оформлен и содержит архитектурную/продуктовую спецификацию.
 - Архитектура зафиксирована как **modular monolith**.
-- Клиенты: **Web Console**, **Telegram Bot**, **REST API**.
+- Клиенты продукта: **Web Console**, **Telegram Bot**, **REST API**.
 - Web и Telegram используют одно application core и одну модель прав.
-- PostgreSQL выбран как внутренний source of truth для продуктового состояния.
+- PostgreSQL выбран как внутренний source of truth для будущего persistent product state.
 - Cloudflare выбран первым DNS provider adapter.
 - V1 зафиксирована как управление доменами/DNS с минимальным Server Catalog и Domain Binding.
-- Phase 0 прошёл архитектурную ревизию со статусом PASS.
-- Backlog V1 сформирован.
-- Project Context System интегрирована и reconciled до **PCS V1**, baseline `06cd250d2847ee87f66f73930d471d7c1f60991d`, профиль `standard-adapted`.
-- В репозитории есть canonical PCS validator с structural/readiness режимами и GitHub operational-layer manifests/workflow.
-- `BI-0002` принят и merged: Web authentication V1 использует Passkeys/WebAuthn с server-side browser sessions (`ADR-0010`).
-- `BI-0003` принят и merged: optimistic concurrency/idempotency используют integer resource version + ETag/If-Match и PostgreSQL-backed application operation state (`ADR-0011`).
-- Default completed idempotency retention V1 — 24 часа; неопределённый provider outcome не допускает blind retry.
-- Internal `User` остаётся независимым от Telegram/Web authentication mechanism; Telegram identity и WebAuthn credentials могут принадлежать одному User.
-- Следующая активная задача — `BI-0101` (Issue #5), первый product-code scaffold.
-- Server/runtime не менялись в рамках BI-0002/BI-0003.
+- Project Context System reconciled до **PCS V1** baseline `06cd250d2847ee87f66f73930d471d7c1f60991d`, профиль `standard-adapted`.
+- `BI-0002` принят и merged: Web authentication V1 — Passkeys/WebAuthn + server-side browser sessions (`ADR-0010`).
+- `BI-0003` принят и merged: integer resource version + ETag/If-Match и PostgreSQL-backed application operation/idempotency state (`ADR-0011`).
+- `BI-0101` реализовал первый product-code scaffold в PR #6.
 
-## Чего сейчас нет
+## Подтверждённый scaffold BI-0101
 
-На момент этой сверки **product-code scaffold ещё не зафиксирован как завершённый**.
+На проверенном PR head `93ce9415af1e4f793b0bae69607e3e2a8ebca7ae` существуют:
 
-В репозитории пока нет подтверждённой реализации:
+```text
+apps/
+├── api/
+├── telegram/
+└── web/README.md
 
-- рабочего FastAPI backend scaffold;
-- PostgreSQL migrations;
-- WebAuthn runtime;
-- browser session persistence;
+modules/
+infrastructure/
+tests/
+deploy/README.md
+```
+
+Подтверждены:
+
+- Python 3.13 project metadata через `pyproject.toml`;
+- FastAPI application entrypoint;
+- `GET /health` с ответом `{"status":"ok","service":"bakunity-infra"}`;
+- отдельный Telegram entrypoint/bootstrap router без provider/business logic;
+- application settings foundation через `pydantic-settings`;
+- `.env.example` без реальных secrets;
+- pytest tests для health и Telegram dispatcher bootstrap;
+- Ruff/compile/pytest Product CI;
+- `docs/DEVELOPMENT.md` для local repository workflow;
+- Web/deploy boundaries без ложного утверждения о готовом frontend/runtime.
+
+Product CI run `33261488967` на этом head завершился `success`:
+
+```text
+Install project → success
+Ruff            → success
+Compile         → success
+Tests           → success
+```
+
+PCS Context Check run `33261488963` завершился `success`:
+
+```text
+Structural validation → success
+Readiness validation  → success
+```
+
+## Что пока НЕ реализовано
+
+Scaffold не означает готовность следующих возможностей. Пока нет подтверждённой реализации:
+
+- PostgreSQL connection/migrations/business schema;
+- WebAuthn runtime и browser session persistence;
+- RBAC/ownership/audit runtime;
 - optimistic concurrency runtime;
-- idempotency runtime/storage migration;
+- idempotency persistence/runtime;
 - Cloudflare adapter;
-- Telegram bot runtime;
-- Next.js Web Console;
-- server management;
+- DNS zones/domain lifecycle;
+- Telegram domain/DNS business flows;
+- полноценный Next.js Web Console;
+- Server Catalog runtime;
+- SSH/server management;
 - reverse proxy;
 - TLS automation;
 - deployments;
 - monitoring.
-
-Наличие этих элементов в architecture/API/DB/backlog означает зафиксированный план/contract, а не реализованную возможность.
 
 ## Зафиксированная граница V1
 
@@ -78,121 +113,83 @@ V1 не включает SSH automation, reverse proxy, TLS issuance, deployment
 
 ## Закрытые decision gates
 
-### Web authentication
-
-**Accepted:** `ADR-0010`.
+### Web authentication — ADR-0010
 
 ```text
 Passkeys / WebAuthn
-      ↓
-backend verification
-      ↓
-server-side session
-      ↓
-Secure + HttpOnly opaque cookie
-      ↓
-GET /api/v1/me + backend authorization
+→ backend verification
+→ server-side session
+→ Secure + HttpOnly opaque cookie
+→ backend authorization
 ```
 
-Telegram не является обязательным Web IdP, а browser session не является business identity.
-
-### Optimistic concurrency + idempotency
-
-**Accepted:** `ADR-0011`.
+### Optimistic concurrency + idempotency — ADR-0011
 
 ```text
 Mutable resource
-      ↓
-version BIGINT
-      ↓
-ETag / If-Match / expected_version
-      ↓
-stale write → 409 resource_version_conflict
+→ version BIGINT
+→ ETag / If-Match / expected_version
+→ stale write = resource_version_conflict
 ```
 
 Retry-sensitive mutation:
 
 ```text
 Idempotency-Key / operation_id
-      ↓
-PostgreSQL idempotency_operations
-      ↓
-request fingerprint
-      ↓
-one logical operation
-      ↓
-completed result reused without second side effect
+→ PostgreSQL idempotency state
+→ request fingerprint
+→ one logical operation
 ```
 
-Default completed idempotency retention V1 — 24 часа. `unknown` external outcome не маскируется под success/blind retry.
+Default completed retention V1 — 24 часа. `unknown` external outcome не маскируется под success/blind retry.
 
 ## Открытые stage-specific decision gates
 
-1. Production secret storage — закрыть до реальных provider credentials.
-2. Семантика zone-level/apex DNS operations — закрыть до административного apex write flow.
-3. Provider reconciliation/retry strategy — закрыть до DNS provider write flow.
+1. Production secret storage — до реальных provider credentials.
+2. Zone-level/apex DNS semantics — до административного apex write flow.
+3. Provider reconciliation/retry strategy — до DNS provider write flow.
 
-Дополнительно при Identity implementation нужно конкретизировать bootstrap/recovery UX для WebAuthn enrollment, не меняя выбранный authentication primitive.
+При Identity implementation также нужно конкретизировать bootstrap/recovery UX для WebAuthn enrollment без изменения authentication primitive.
 
-Эти оставшиеся gate **не блокируют repository scaffold BI-0101**.
+Эти gate не блокировали BI-0101 и не должны закрываться фиктивно раньше соответствующего этапа.
 
 ## Текущий инженерный рубеж
 
-Активная задача:
+BI-0101 готов к merge после финального context-only PCS check.
+
+После merge следующий backlog item:
 
 ```text
-BI-0101 — Repository scaffold
-Issue #5
+BI-0102 — Конфигурация приложения
 ```
 
-Цель — создать минимальный рабочий каркас modular monolith, после которого можно последовательно реализовывать configuration, PostgreSQL/migrations и Identity foundation.
+Он должен развить базовый config scaffold до environment separation, logging, request/correlation ID и безопасных secret references.
 
-Первый продуктовый vertical milestone после foundation epics остаётся:
+После foundation epics первый продуктовый vertical milestone остаётся:
 
 ```text
 Пользователь с permission
-      ↓
-выбирает bakunity.online
-      ↓
-создаёт test.bakunity.online на IPv4
-      ↓
-Cloudflare получает DNS record
-      ↓
-PostgreSQL хранит Domain Resource
-      ↓
-Audit фиксирует mutation
-      ↓
-результат читается через API
-      ↓
-виден в Telegram
-      ↓
-тот же use case подключается к Web
+→ выбирает bakunity.online
+→ создаёт test.bakunity.online на IPv4
+→ Cloudflare получает DNS record
+→ PostgreSQL хранит Domain Resource
+→ Audit фиксирует mutation
+→ результат читается через API
+→ виден в Telegram
+→ тот же use case подключается к Web
 ```
 
-## Verification state
+## Runtime boundary
 
-### BI-0002
+BI-0101 проверялся только в repository/GitHub Actions scope.
 
-Merge commit:
+Не выполнялись:
 
-```text
-c1e70d768255c86c089f6b06f070d2c710fa0bb6
-```
-
-Main PCS Context Check: workflow run `33260864549` → success.
-
-### BI-0003
-
-Merge commit:
-
-```text
-daea95ab7d042069c1cd962c038bb4fad8fd2d59
-```
-
-PR #4 final PCS checks → success.  
-Main PCS Context Check: workflow run `33261170180` → success.
-
-Runtime/server verification не выполнялась и не требовалась: обе задачи были repository/docs only.
+- SSH к серверу;
+- staging/production deploy;
+- Cloudflare mutation;
+- production DB mutation;
+- production Telegram bot run.
 
 ## Authoritative ссылки
 
@@ -204,8 +201,9 @@ Runtime/server verification не выполнялась и не требовал
 - Concurrency/idempotency: `docs/ADR/0011-concurrency-idempotency.md`
 - Roadmap: `docs/ROADMAP.md`
 - Backlog: `docs/BACKLOG_V1.md`
-- Phase 0 review: `docs/PHASE0_REVIEW.md`
+- API: `docs/API_CONTRACT.md`
+- DB model: `docs/DATABASE_MODEL.md`
+- Security: `docs/SECURITY.md`
+- Development: `docs/DEVELOPMENT.md`
 - Активная работа: `docs/ACTIVE_WORK.md`
-- PCS integration: `docs/CONTEXT_SYSTEM.md`
-- GitHub integration: `docs/GITHUB_INTEGRATION.md`
 - Evidence: `docs/EVIDENCE.md`
