@@ -2,7 +2,7 @@
 
 **Статус знания:** CONFIRMED  
 **Последняя сверка:** 2026-08-29  
-**Фаза:** V1 foundation decisions; product implementation ещё не начата.
+**Фаза:** старт реализации V1; активная задача BI-0101 repository scaffold.
 
 Этот документ отвечает только на вопрос: **что истинно о Bakunity Infra прямо сейчас**.
 
@@ -22,17 +22,19 @@
 - Project Context System интегрирована и reconciled до **PCS V1**, baseline `06cd250d2847ee87f66f73930d471d7c1f60991d`, профиль `standard-adapted`.
 - В репозитории есть canonical PCS validator с structural/readiness режимами и GitHub operational-layer manifests/workflow.
 - `BI-0002` принят и merged: Web authentication V1 использует Passkeys/WebAuthn с server-side browser sessions (`ADR-0010`).
-- `BI-0003` фиксирует optimistic concurrency и idempotency (`ADR-0011`): integer resource version + ETag/If-Match, PostgreSQL-backed application operation/idempotency state, default completed TTL 24 часа.
+- `BI-0003` принят и merged: optimistic concurrency/idempotency используют integer resource version + ETag/If-Match и PostgreSQL-backed application operation state (`ADR-0011`).
+- Default completed idempotency retention V1 — 24 часа; неопределённый provider outcome не допускает blind retry.
 - Internal `User` остаётся независимым от Telegram/Web authentication mechanism; Telegram identity и WebAuthn credentials могут принадлежать одному User.
+- Следующая активная задача — `BI-0101` (Issue #5), первый product-code scaffold.
 - Server/runtime не менялись в рамках BI-0002/BI-0003.
 
 ## Чего сейчас нет
 
-**Product implementation ещё не начата.**
+На момент этой сверки **product-code scaffold ещё не зафиксирован как завершённый**.
 
 В репозитории пока нет подтверждённой реализации:
 
-- FastAPI backend;
+- рабочего FastAPI backend scaffold;
 - PostgreSQL migrations;
 - WebAuthn runtime;
 - browser session persistence;
@@ -124,9 +126,7 @@ completed result reused without second side effect
 
 Default completed idempotency retention V1 — 24 часа. `unknown` external outcome не маскируется под success/blind retry.
 
-## Открытые decision gates до соответствующей реализации
-
-Остаются stage-specific решения:
+## Открытые stage-specific decision gates
 
 1. Production secret storage — закрыть до реальных provider credentials.
 2. Семантика zone-level/apex DNS operations — закрыть до административного apex write flow.
@@ -136,11 +136,18 @@ Default completed idempotency retention V1 — 24 часа. `unknown` external o
 
 Эти оставшиеся gate **не блокируют repository scaffold BI-0101**.
 
-## Следующий инженерный рубеж
+## Текущий инженерный рубеж
 
-Следующее действие после принятия BI-0003 — `BI-0101`: минимальный repository scaffold модульного монолита без преждевременного создания пустых абстракций.
+Активная задача:
 
-После foundation epics первый реальный vertical milestone остаётся:
+```text
+BI-0101 — Repository scaffold
+Issue #5
+```
+
+Цель — создать минимальный рабочий каркас modular monolith, после которого можно последовательно реализовывать configuration, PostgreSQL/migrations и Identity foundation.
+
+Первый продуктовый vertical milestone после foundation epics остаётся:
 
 ```text
 Пользователь с permission
@@ -162,19 +169,30 @@ Audit фиксирует mutation
 тот же use case подключается к Web
 ```
 
-До реализации product-code этот milestone остаётся планом.
-
 ## Verification state
 
-BI-0002 merge commit:
+### BI-0002
+
+Merge commit:
 
 ```text
 c1e70d768255c86c089f6b06f070d2c710fa0bb6
 ```
 
-PCS Context Check на `main` после merge: workflow run `33260864549` → success.
+Main PCS Context Check: workflow run `33260864549` → success.
 
-BI-0003 считается завершённым только после собственного PR CI PASS и merge.
+### BI-0003
+
+Merge commit:
+
+```text
+daea95ab7d042069c1cd962c038bb4fad8fd2d59
+```
+
+PR #4 final PCS checks → success.  
+Main PCS Context Check: workflow run `33261170180` → success.
+
+Runtime/server verification не выполнялась и не требовалась: обе задачи были repository/docs only.
 
 ## Authoritative ссылки
 
