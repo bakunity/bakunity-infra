@@ -2,7 +2,7 @@
 
 **Статус знания:** CONFIRMED  
 **Последняя сверка:** 2026-08-29  
-**Фаза:** старт реализации V1; BI-0101 scaffold реализован и проверен в PR #6.
+**Фаза:** V1 foundation; BI-0101 merged, активная задача BI-0102.
 
 Этот документ отвечает только на вопрос: **что истинно о Bakunity Infra прямо сейчас**.
 
@@ -10,20 +10,21 @@
 
 ## Что существует сейчас
 
-- Архитектура зафиксирована как **modular monolith**.
+- Архитектура: **modular monolith**.
 - Клиенты продукта: **Web Console**, **Telegram Bot**, **REST API**.
 - Web и Telegram используют одно application core и одну модель прав.
-- PostgreSQL выбран как внутренний source of truth для будущего persistent product state.
+- PostgreSQL выбран внутренним source of truth для persistent product state.
 - Cloudflare выбран первым DNS provider adapter.
-- V1 зафиксирована как управление доменами/DNS с минимальным Server Catalog и Domain Binding.
-- Project Context System reconciled до **PCS V1** baseline `06cd250d2847ee87f66f73930d471d7c1f60991d`, профиль `standard-adapted`.
-- `BI-0002` принят и merged: Web authentication V1 — Passkeys/WebAuthn + server-side browser sessions (`ADR-0010`).
-- `BI-0003` принят и merged: integer resource version + ETag/If-Match и PostgreSQL-backed application operation/idempotency state (`ADR-0011`).
-- `BI-0101` реализовал первый product-code scaffold в PR #6.
+- V1 — управление доменами/DNS с минимальным Server Catalog и Domain Binding.
+- PCS reconciled до **PCS V1** baseline `06cd250d2847ee87f66f73930d471d7c1f60991d`, профиль `standard-adapted`.
+- `BI-0002` merged: Passkeys/WebAuthn + server-side Web sessions (`ADR-0010`).
+- `BI-0003` merged: integer version + ETag/If-Match и PostgreSQL-backed idempotency operation state (`ADR-0011`).
+- `BI-0101` merged как `91ae2239475a7c9560dfcff5a16424cb9cb3134c`: первый product-code scaffold существует в `main`.
+- Активная следующая задача: `BI-0102`, Issue #7 — configuration/logging/correlation foundation.
 
 ## Подтверждённый scaffold BI-0101
 
-На проверенном PR head `93ce9415af1e4f793b0bae69607e3e2a8ebca7ae` существуют:
+В `main` существуют:
 
 ```text
 apps/
@@ -42,29 +43,23 @@ deploy/README.md
 - Python 3.13 project metadata через `pyproject.toml`;
 - FastAPI application entrypoint;
 - `GET /health` с ответом `{"status":"ok","service":"bakunity-infra"}`;
-- отдельный Telegram entrypoint/bootstrap router без provider/business logic;
-- application settings foundation через `pydantic-settings`;
+- Telegram entrypoint/bootstrap router без provider/business logic;
+- application settings foundation на `pydantic-settings`;
 - `.env.example` без реальных secrets;
-- pytest tests для health и Telegram dispatcher bootstrap;
+- health + Telegram bootstrap tests;
 - Ruff/compile/pytest Product CI;
-- `docs/DEVELOPMENT.md` для local repository workflow;
-- Web/deploy boundaries без ложного утверждения о готовом frontend/runtime.
+- `docs/DEVELOPMENT.md` для local workflow;
+- Web/deploy boundaries без ложного runtime implementation.
 
-Product CI run `33261488967` на этом head завершился `success`:
+PR #6 final Product CI и PCS checks были PASS. После merge Product CI на commit `91ae2239...`, workflow run `33261628217`, также завершился `success`.
 
-```text
-Install project → success
-Ruff            → success
-Compile         → success
-Tests           → success
-```
-
-PCS Context Check run `33261488963` завершился `success`:
+Первый post-merge PCS run `33261628261` завершился structural FAIL по одной конкретной причине:
 
 ```text
-Structural validation → success
-Readiness validation  → success
+state_based_on_commit is not an ancestor of HEAD
 ```
+
+Причина: PCS state ссылался на pre-squash PR head `93ce9415...`, который после squash merge не является предком `main`. Product/scaffold failure не было. `.project/state.json` reconciled на squash merge commit `91ae2239...`; новый PCS run должен подтвердить исправление.
 
 ## Что пока НЕ реализовано
 
@@ -88,26 +83,7 @@ Scaffold не означает готовность следующих возм�
 
 ## Зафиксированная граница V1
 
-V1 включает:
-
-- Identity/Authorization foundation;
-- Passkeys/WebAuthn для Web authentication;
-- server-side Web sessions с revocation/expiration;
-- несколько DNS-зон;
-- Cloudflare DNS adapter;
-- Domain Resource lifecycle;
-- A/AAAA/CNAME/TXT/MX/NS records;
-- минимальный Server Catalog;
-- Domain Binding `direct_dns`;
-- ownership, roles, permissions и limits;
-- audit log;
-- Telegram operational UX;
-- Web Console UX;
-- REST API;
-- provider sync/error states;
-- optimistic concurrency protection;
-- idempotency protection для retry-sensitive infrastructure mutation;
-- staging/release hardening.
+V1 включает Identity/Authorization foundation, WebAuthn/session auth, DNS zones/provider adapter, Domain Resource lifecycle, A/AAAA/CNAME/TXT/MX/NS, минимальный Server Catalog, direct DNS bindings, ownership/RBAC/limits, audit, Web/Telegram/API, provider sync/error states, concurrency/idempotency и staging/release hardening.
 
 V1 не включает SSH automation, reverse proxy, TLS issuance, deployments, server agent, полноценный monitoring, Kubernetes, собственный authoritative DNS или преждевременные микросервисы.
 
@@ -116,7 +92,7 @@ V1 не включает SSH automation, reverse proxy, TLS issuance, deployment
 ### Web authentication — ADR-0010
 
 ```text
-Passkeys / WebAuthn
+Passkeys/WebAuthn
 → backend verification
 → server-side session
 → Secure + HttpOnly opaque cookie
@@ -132,16 +108,7 @@ Mutable resource
 → stale write = resource_version_conflict
 ```
 
-Retry-sensitive mutation:
-
-```text
-Idempotency-Key / operation_id
-→ PostgreSQL idempotency state
-→ request fingerprint
-→ one logical operation
-```
-
-Default completed retention V1 — 24 часа. `unknown` external outcome не маскируется под success/blind retry.
+Retry-sensitive mutation использует `Idempotency-Key`/`operation_id`, PostgreSQL state и request fingerprint. Default completed retention V1 — 24 часа. `unknown` external outcome не маскируется под success/blind retry.
 
 ## Открытые stage-specific decision gates
 
@@ -151,59 +118,46 @@ Default completed retention V1 — 24 часа. `unknown` external outcome не 
 
 При Identity implementation также нужно конкретизировать bootstrap/recovery UX для WebAuthn enrollment без изменения authentication primitive.
 
-Эти gate не блокировали BI-0101 и не должны закрываться фиктивно раньше соответствующего этапа.
-
 ## Текущий инженерный рубеж
 
-BI-0101 готов к merge после финального context-only PCS check.
-
-После merge следующий backlog item:
+Активная задача:
 
 ```text
-BI-0102 — Конфигурация приложения
+BI-0102 — Конфигурация приложения, logging и correlation ID
+Issue #7
 ```
 
-Он должен развить базовый config scaffold до environment separation, logging, request/correlation ID и безопасных secret references.
+Она развивает scaffold до typed environment semantics, startup validation, structured logging и request/correlation context. Production secret storage backend не выбирается фиктивно в BI-0102 и остаётся отдельным gate до provider credentials.
 
 После foundation epics первый продуктовый vertical milestone остаётся:
 
 ```text
-Пользователь с permission
-→ выбирает bakunity.online
-→ создаёт test.bakunity.online на IPv4
-→ Cloudflare получает DNS record
-→ PostgreSQL хранит Domain Resource
-→ Audit фиксирует mutation
-→ результат читается через API
-→ виден в Telegram
-→ тот же use case подключается к Web
+User + permission
+→ bakunity.online
+→ test.bakunity.online → IPv4
+→ Cloudflare DNS
+→ PostgreSQL Domain Resource
+→ Audit
+→ API
+→ Telegram
+→ Web
 ```
 
 ## Runtime boundary
 
-BI-0101 проверялся только в repository/GitHub Actions scope.
-
-Не выполнялись:
-
-- SSH к серверу;
-- staging/production deploy;
-- Cloudflare mutation;
-- production DB mutation;
-- production Telegram bot run.
+До текущего состояния выполнялись repository/GitHub Actions операции. BI-0101 не использовал SSH, staging/production deploy, Cloudflare mutation, production DB или production Telegram runtime.
 
 ## Authoritative ссылки
 
 - Цели: `docs/GOALS.md`
-- Product boundary: `docs/PRODUCT.md`
+- Product: `docs/PRODUCT.md`
 - Архитектура: `docs/ARCHITECTURE.md`
-- Решения: `docs/ADR/`
-- Web authentication: `docs/ADR/0010-web-auth-passkeys.md`
-- Concurrency/idempotency: `docs/ADR/0011-concurrency-idempotency.md`
+- ADR: `docs/ADR/`
 - Roadmap: `docs/ROADMAP.md`
 - Backlog: `docs/BACKLOG_V1.md`
 - API: `docs/API_CONTRACT.md`
-- DB model: `docs/DATABASE_MODEL.md`
+- DB: `docs/DATABASE_MODEL.md`
 - Security: `docs/SECURITY.md`
 - Development: `docs/DEVELOPMENT.md`
-- Активная работа: `docs/ACTIVE_WORK.md`
+- Active work: `docs/ACTIVE_WORK.md`
 - Evidence: `docs/EVIDENCE.md`
