@@ -18,16 +18,17 @@
   "adr_dir": "docs/ADR",
   "incidents_dir": "docs/INCIDENTS",
   "evidence_doc": "docs/EVIDENCE.md",
-  "state_based_on_commit": "c1e70d768255c86c089f6b06f070d2c710fa0bb6",
-  "last_verified_commit": "c1e70d768255c86c089f6b06f070d2c710fa0bb6",
-  "active_branch": "bi-0003-concurrency-idempotency",
-  "active_pr": 4,
+  "state_based_on_commit": "daea95ab7d042069c1cd962c038bb4fad8fd2d59",
+  "last_verified_commit": "daea95ab7d042069c1cd962c038bb4fad8fd2d59",
+  "active_branch": "main",
+  "active_pr": null,
   "status": "ready",
   "updated_at": "2026-08-29",
-  "last_reconciled_at": "2026-08-29T18:46:00+03:00",
-  "phase": "v1-foundation-decisions",
+  "last_reconciled_at": "2026-08-29T18:48:00+03:00",
+  "phase": "v1-implementation-start",
   "implementation_status": "not_started",
-  "active_work": "BI-0003-concurrency-idempotency-decision",
+  "active_work": "BI-0101-repository-scaffold",
+  "active_issue": 5,
   "knowledge_status": "CONFIRMED",
   "authoritative": {
     "project_state": "docs/PROJECT_STATE.md",
@@ -62,11 +63,10 @@
   },
   "notes": [
     "PCS V1 baseline remains 06cd250d2847ee87f66f73930d471d7c1f60991d.",
-    "BI-0002 was squash-merged to main as c1e70d768255c86c089f6b06f070d2c710fa0bb6 and main PCS CI run 33260864549 passed.",
-    "BI-0003 chooses integer resource version + ETag/If-Match and PostgreSQL-backed idempotency operations with a 24-hour completed retention default.",
-    "PR #4 carries BI-0003 and must pass PCS structural/readiness checks before merge.",
-    "Remaining decision gates are stage-specific and do not block BI-0101 repository scaffold.",
-    "Product implementation has not started; BI-0003 is repository/docs only.",
-    "Runtime/server access is outside BI-0003 scope."
+    "BI-0002 merged as c1e70d768255c86c089f6b06f070d2c710fa0bb6; main PCS run 33260864549 passed.",
+    "BI-0003 merged as daea95ab7d042069c1cd962c038bb4fad8fd2d59; main PCS run 33261170180 passed.",
+    "BI-0101 Issue #5 is the next active work item and the first product-code scaffold task.",
+    "Remaining decision gates are stage-specific and do not block BI-0101 scaffold.",
+    "Runtime/server access remains outside current scope."
   ]
 }
