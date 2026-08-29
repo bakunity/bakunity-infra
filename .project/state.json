@@ -18,15 +18,15 @@
   "adr_dir": "docs/ADR",
   "incidents_dir": "docs/INCIDENTS",
   "evidence_doc": "docs/EVIDENCE.md",
-  "state_based_on_commit": "daea95ab7d042069c1cd962c038bb4fad8fd2d59",
-  "last_verified_commit": "daea95ab7d042069c1cd962c038bb4fad8fd2d59",
-  "active_branch": "main",
+  "state_based_on_commit": "0095bb7c73027f6e619959d85c9c4472cd025d29",
+  "last_verified_commit": "0095bb7c73027f6e619959d85c9c4472cd025d29",
+  "active_branch": "bi-0101-repository-scaffold",
   "active_pr": null,
   "status": "ready",
   "updated_at": "2026-08-29",
-  "last_reconciled_at": "2026-08-29T18:48:00+03:00",
+  "last_reconciled_at": "2026-08-29T18:55:00+03:00",
   "phase": "v1-implementation-start",
-  "implementation_status": "not_started",
+  "implementation_status": "in_progress",
   "active_work": "BI-0101-repository-scaffold",
   "active_issue": 5,
   "knowledge_status": "CONFIRMED",
@@ -49,7 +49,8 @@
     "github_integration": "docs/GITHUB_INTEGRATION.md",
     "context_system": "docs/CONTEXT_SYSTEM.md",
     "incidents": "docs/INCIDENTS/",
-    "evidence": "docs/EVIDENCE.md"
+    "evidence": "docs/EVIDENCE.md",
+    "development": "docs/DEVELOPMENT.md"
   },
   "open_decision_gates": [
     "production_secret_storage",
@@ -63,10 +64,10 @@
   },
   "notes": [
     "PCS V1 baseline remains 06cd250d2847ee87f66f73930d471d7c1f60991d.",
-    "BI-0002 merged as c1e70d768255c86c089f6b06f070d2c710fa0bb6; main PCS run 33260864549 passed.",
-    "BI-0003 merged as daea95ab7d042069c1cd962c038bb4fad8fd2d59; main PCS run 33261170180 passed.",
-    "BI-0101 Issue #5 is the next active work item and the first product-code scaffold task.",
-    "Remaining decision gates are stage-specific and do not block BI-0101 scaffold.",
+    "BI-0002 and BI-0003 are merged and verified on main.",
+    "BI-0101 is the first product-code task and is active on bi-0101-repository-scaffold.",
+    "The scaffold contains FastAPI/Telegram/config/test/CI foundations only; provider/business/runtime implementation is not part of BI-0101.",
+    "Remaining decision gates are stage-specific and do not block the scaffold.",
     "Runtime/server access remains outside current scope."
   ]
 }
