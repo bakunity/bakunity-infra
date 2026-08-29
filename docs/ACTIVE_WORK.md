@@ -1,6 +1,6 @@
 # Активная работа
 
-**Статус:** BI-0002 merged; BI-0003 decision оформляется в рабочей ветке. Product-code ещё не начат.  
+**Статус:** BI-0002 merged; BI-0003 оформлен в PR #4, ожидается финальный PCS CI. Product-code ещё не начат.  
 **Обновлено:** 2026-08-29
 
 Этот файл отвечает только на вопрос: **что делается прямо сейчас и что является следующим конкретным шагом**.
@@ -11,7 +11,7 @@
 BI-0003 — Optimistic concurrency + idempotency
 Issue: #3
 Branch: bi-0003-concurrency-idempotency
-PR: ещё не открыт
+PR: #4
 Base commit: c1e70d768255c86c089f6b06f070d2c710fa0bb6
 Runtime scope: repository/local/CI only
 ```
@@ -56,7 +56,7 @@ Web authentication V1 остаётся зафиксирован в `ADR-0010`: P
 - [x] security model reconciled;
 - [x] project state reconciled;
 - [x] BI-0002 merge/main CI зафиксированы;
-- [ ] PR открыт;
+- [x] PR #4 открыт;
 - [ ] PCS structural validation PASS на финальном PR HEAD;
 - [ ] PCS readiness validation PASS на финальном PR HEAD;
 - [ ] PR merged.
