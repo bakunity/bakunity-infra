@@ -1,6 +1,6 @@
 # Активная работа
 
-**Статус:** BI-0002 выполнен в рабочей ветке; открыт PR #2. Product-code ещё не начат.  
+**Статус:** BI-0002 выполнен в рабочей ветке; открыт PR #2, PCS checks PASS. Product-code ещё не начат.  
 **Обновлено:** 2026-08-29
 
 Этот файл отвечает только на вопрос: **что делается прямо сейчас и что является следующим конкретным шагом**.
@@ -39,9 +39,11 @@ Web authentication V1 зафиксирован в `ADR-0010`:
 - [x] Web UX reconciled;
 - [x] security model reconciled;
 - [x] project context обновлён;
-- [ ] PCS structural validation в PR CI;
-- [ ] PCS readiness validation в PR CI;
+- [x] PCS structural validation в PR CI;
+- [x] PCS readiness validation в PR CI;
 - [ ] PR reviewed/merged.
+
+Evidence первой CI-проверки: workflow run `33256192021` на commit `a299dd00408c6ca2de8f7c31dd22502a46b6ec2b`. После финальных context/evidence commits текущий PR HEAD должен пройти те же checks повторно.
 
 ## Следующий безопасный шаг
 
@@ -72,4 +74,4 @@ Web authentication V1 зафиксирован в `ADR-0010`:
 - `PROJECT_STATE.md` фиксирует WebAuthn decision как текущую truth;
 - `.project/state.json` переключается на `main`, очищает `active_pr` и переводит active work на BI-0003;
 - `ACTIVE_WORK.md` переключается на BI-0003;
-- evidence фиксирует CI/validation результат.
+- evidence фиксирует финальный merged/CI результат.
