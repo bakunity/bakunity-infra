@@ -1,6 +1,6 @@
 # Активная работа
 
-**Статус:** BI-0002 выполнен в рабочей ветке; ожидает PR/review. Product-code ещё не начат.  
+**Статус:** BI-0002 выполнен в рабочей ветке; открыт PR #2. Product-code ещё не начат.  
 **Обновлено:** 2026-08-29
 
 Этот файл отвечает только на вопрос: **что делается прямо сейчас и что является следующим конкретным шагом**.
@@ -11,6 +11,7 @@
 BI-0002 — Web authentication decision
 Issue: #1
 Branch: bi-0002-web-auth
+PR: #2
 Base commit: d07f4c43be699d437db95c0183aae16492de4c9d
 Runtime scope: repository/local/CI only
 ```
@@ -69,6 +70,6 @@ Web authentication V1 зафиксирован в `ADR-0010`:
 После merge BI-0002:
 
 - `PROJECT_STATE.md` фиксирует WebAuthn decision как текущую truth;
-- `.project/state.json` удаляет `web_authentication` из open decision gates;
+- `.project/state.json` переключается на `main`, очищает `active_pr` и переводит active work на BI-0003;
 - `ACTIVE_WORK.md` переключается на BI-0003;
 - evidence фиксирует CI/validation результат.
