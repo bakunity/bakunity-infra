@@ -1,8 +1,8 @@
 # Текущее состояние проекта
 
 **Статус знания:** CONFIRMED  
-**Последняя сверка:** 2026-08-21  
-**Фаза:** Phase 0 завершён архитектурно; реализация V1 ещё не начата.
+**Последняя сверка:** 2026-08-29  
+**Фаза:** Phase 0 decision gates; реализация V1 ещё не начата.
 
 Этот документ отвечает только на вопрос: **что истинно о Bakunity Infra прямо сейчас**.
 
@@ -21,7 +21,9 @@
 - Backlog V1 сформирован.
 - Project Context System интегрирована и reconciled до **PCS V1**, baseline `06cd250d2847ee87f66f73930d471d7c1f60991d`, профиль `standard-adapted`.
 - В репозитории есть canonical PCS validator с structural/readiness режимами и GitHub operational-layer manifests/workflow.
-- PCS V1 migration не меняла сервер/runtime и не меняла product implementation state.
+- Web authentication decision закрыт в `ADR-0010`: V1 использует Passkeys/WebAuthn с server-side browser sessions.
+- Internal `User` остаётся независимым от Telegram/Web authentication mechanism; Telegram identity и WebAuthn credentials могут принадлежать одному User.
+- PCS V1 migration и BI-0002 не меняли сервер/runtime.
 
 ## Чего сейчас нет
 
@@ -31,6 +33,8 @@
 
 - FastAPI backend;
 - PostgreSQL migrations;
+- WebAuthn runtime;
+- browser session persistence;
 - Cloudflare adapter;
 - Telegram bot runtime;
 - Next.js Web Console;
@@ -47,6 +51,8 @@
 V1 включает:
 
 - Identity/Authorization foundation;
+- Passkeys/WebAuthn для Web authentication;
+- server-side Web sessions с revocation/expiration;
 - несколько DNS-зон;
 - Cloudflare DNS adapter;
 - Domain Resource lifecycle;
@@ -64,22 +70,41 @@ V1 включает:
 
 V1 не включает SSH automation, reverse proxy, TLS issuance, deployments, server agent, полноценный monitoring, Kubernetes, собственный authoritative DNS или преждевременные микросервисы.
 
+## Закрытые decision gates
+
+### Web authentication
+
+**Accepted:** `ADR-0010`.
+
+```text
+Passkeys / WebAuthn
+      ↓
+backend verification
+      ↓
+server-side session
+      ↓
+Secure + HttpOnly opaque cookie
+      ↓
+GET /api/v1/me + backend authorization
+```
+
+Telegram не является обязательным Web IdP, а browser session не является business identity.
+
 ## Открытые decision gates до соответствующей реализации
 
 Нужно отдельно зафиксировать решения по:
 
-1. Web authentication mechanism.
-2. Optimistic concurrency mechanism.
-3. `Idempotency-Key` storage/TTL.
-4. Production secret storage.
-5. Семантике zone-level/apex DNS operations.
-6. Provider reconciliation/retry strategy.
+1. Optimistic concurrency mechanism.
+2. `Idempotency-Key` storage/TTL.
+3. Production secret storage.
+4. Семантике zone-level/apex DNS operations.
+5. Provider reconciliation/retry strategy.
 
-Эти вопросы не меняют общий вектор продукта, но должны быть закрыты до реализации соответствующих write path.
+Дополнительно при Identity implementation нужно конкретизировать bootstrap/recovery UX для WebAuthn enrollment, не меняя выбранный authentication primitive.
 
 ## Следующий инженерный рубеж
 
-Первый реальный vertical milestone после явного старта разработки:
+После закрытия оставшихся обязательных decision gates первый реальный vertical milestone:
 
 ```text
 Пользователь с permission
@@ -101,7 +126,7 @@ Audit фиксирует mutation
 тот же use case подключается к Web
 ```
 
-До явного старта разработки product-code этот milestone остаётся планом.
+До реализации product-code этот milestone остаётся планом.
 
 ## Authoritative ссылки
 
@@ -109,6 +134,7 @@ Audit фиксирует mutation
 - Product boundary: `docs/PRODUCT.md`
 - Архитектура: `docs/ARCHITECTURE.md`
 - Решения: `docs/ADR/`
+- Web authentication: `docs/ADR/0010-web-auth-passkeys.md`
 - Roadmap: `docs/ROADMAP.md`
 - Backlog: `docs/BACKLOG_V1.md`
 - Phase 0 review: `docs/PHASE0_REVIEW.md`

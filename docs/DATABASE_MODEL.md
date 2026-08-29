@@ -34,7 +34,7 @@ disabled
 
 ### user_identities
 
-Связывает пользователя с Telegram, Web или будущим способом входа.
+Связывает пользователя с Telegram или будущими внешними identity providers.
 
 ```text
 id UUID PK
@@ -52,12 +52,73 @@ last_seen_at TIMESTAMPTZ
 UNIQUE(provider, external_id)
 ```
 
-Примеры `provider`:
+Пример `provider` V1:
 
 ```text
 telegram
-web
 ```
+
+Web authentication V1 использует WebAuthn credentials в отдельной таблице, потому что credential имеет собственный lifecycle и verification material. Internal `User` при этом остаётся общим для Telegram и Web.
+
+### webauthn_credentials
+
+Credential пользователя для Web authentication по ADR-0010.
+
+```text
+id UUID PK
+user_id UUID FK -> users.id
+credential_id BYTEA UNIQUE
+public_key BYTEA
+sign_count BIGINT NULL
+transports JSONB NULL
+aaguid UUID NULL
+label TEXT NULL
+created_at TIMESTAMPTZ
+last_used_at TIMESTAMPTZ NULL
+revoked_at TIMESTAMPTZ NULL
+```
+
+Backend хранит только public verification material и безопасные metadata. Private key passkey в Bakunity Infra не хранится.
+
+Один пользователь может иметь несколько credentials.
+
+### web_sessions
+
+Server-side browser sessions.
+
+```text
+id UUID PK
+user_id UUID FK -> users.id
+session_token_hash BYTEA UNIQUE
+created_at TIMESTAMPTZ
+last_used_at TIMESTAMPTZ
+expires_at TIMESTAMPTZ
+revoked_at TIMESTAMPTZ NULL
+ip_address INET NULL
+user_agent_hash TEXT NULL
+metadata JSONB NULL
+```
+
+Browser получает opaque session identifier в `Secure` + `HttpOnly` cookie. В БД желательно хранить hash/token verifier, а не reusable raw session token.
+
+Роли/permissions не копируются в session как authoritative security state: backend вычисляет effective access из актуального пользователя и назначений ролей.
+
+### webauthn_challenges
+
+Краткоживущий state для registration/authentication ceremonies.
+
+```text
+id UUID PK
+user_id UUID FK -> users.id NULL
+challenge_hash BYTEA UNIQUE
+purpose TEXT
+expires_at TIMESTAMPTZ
+used_at TIMESTAMPTZ NULL
+metadata JSONB NULL
+created_at TIMESTAMPTZ
+```
+
+Challenge одноразовый и имеет короткий TTL. Raw reusable challenge не должен сохраняться дольше, чем требуется для ceremony.
 
 ### roles
 
@@ -306,7 +367,7 @@ server.updated
 role.assigned
 ```
 
-Audit metadata не должна содержать токены, пароли, private keys и другие секреты.
+Audit metadata не должна содержать токены, пароли, private keys, raw session token, WebAuthn challenge и другие секреты.
 
 ## Возможная таблица лимитов
 
@@ -331,6 +392,8 @@ updated_at TIMESTAMPTZ
 ```text
 users
  ├── user_identities
+ ├── webauthn_credentials
+ ├── web_sessions
  ├── user_roles
  ├── domains
  └── servers
@@ -387,11 +450,12 @@ Queue/worker добавляются только если это реально 
 - Cloudflare API token;
 - Telegram bot token;
 - SSH private keys;
-- session secrets;
+- raw browser session token;
+- WebAuthn private keys;
 - encryption master keys;
 - пароли провайдеров.
 
-Для таких данных используется защищённое secret storage или зашифрованное хранилище с отдельным ключом.
+Для таких данных используется защищённое secret storage, hash/verifier representation или зашифрованное хранилище с отдельным ключом в зависимости от типа секрета.
 
 ## Статус документа
 

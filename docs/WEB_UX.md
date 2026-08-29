@@ -19,6 +19,55 @@ infra.bakunity.online
 - Опасные действия требуют явного подтверждения.
 - Provider-specific детали показываются только там, где это действительно полезно.
 
+# Вход и сессия
+
+Web authentication V1 зафиксирован в `ADR-0010`: основной способ входа — **Passkey/WebAuthn**.
+
+Базовый login flow:
+
+```text
+Открыть Web Console
+      ↓
+[ Войти с passkey ]
+      ↓
+браузер запускает WebAuthn ceremony
+      ↓
+backend проверяет assertion
+      ↓
+создаётся server-side session
+      ↓
+GET /api/v1/me
+      ↓
+Dashboard
+```
+
+Web не хранит роли/permissions или долгоживущий bearer token в `localStorage` как источник доверия. Browser session представлена opaque `Secure` + `HttpOnly` cookie.
+
+Если session истекла или отозвана, пользователь возвращается на экран входа без потери server-side project state.
+
+Минимальные состояния экрана входа:
+
+- ready;
+- passkey prompt active;
+- authentication cancelled;
+- credential not recognized;
+- user blocked/disabled;
+- temporary backend error.
+
+Публичная самостоятельная регистрация по умолчанию не входит в V1. Добавление нового passkey выполняется через контролируемый bootstrap/invite либо из уже аутентифицированного профиля.
+
+В профиле пользователя позже должен быть раздел «Passkeys», где можно:
+
+- посмотреть зарегистрированные credentials по безопасной metadata;
+- добавить новый passkey;
+- отозвать credential;
+- завершить другие Web sessions;
+- завершить текущую session.
+
+Удаление последнего credential должно иметь отдельную защиту от потери доступа.
+
+Telegram linking остаётся отдельным действием: Telegram не является обязательным Web login provider.
+
 # Общая навигация
 
 ```text
@@ -272,13 +321,15 @@ User 12         active    linked      yes    Member
 Карточка пользователя:
 
 - identities;
+- passkeys (без sensitive credential material);
+- активные/отзываемые Web sessions, если разрешено;
 - роли;
 - эффективные права;
 - лимиты;
 - принадлежащие домены;
 - последние audit events.
 
-Изменение прав должно создавать audit event.
+Изменение прав, credential lifecycle и административный session revoke должны создавать audit/security event там, где это уместно.
 
 # Ошибки и состояния
 
