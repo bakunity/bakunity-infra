@@ -17,6 +17,7 @@ Authoritative источник архитектурных и процессны�
 | [ADR-0007](ADR/0007-no-premature-microservices.md) | Никаких преждевременных микросервисов | Accepted |
 | [ADR-0008](ADR/0008-project-context-system.md) | Project Context System | Accepted |
 | [ADR-0009](ADR/0009-pcs-v1-reconciliation.md) | Reconciliation существующей PCS-интеграции с PCS V1 | Accepted |
+| [ADR-0010](ADR/0010-web-auth-passkeys.md) | Web authentication через Passkeys/WebAuthn | Accepted |
 
 ## Правило
 
