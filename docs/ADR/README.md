@@ -33,5 +33,6 @@ Date: YYYY-MM-DD
 - [ADR-0008 — Project Context System](0008-project-context-system.md)
 - [ADR-0009 — Reconciliation существующей PCS-интеграции с PCS V1](0009-pcs-v1-reconciliation.md)
 - [ADR-0010 — Web authentication через Passkeys/WebAuthn](0010-web-auth-passkeys.md)
+- [ADR-0011 — Optimistic concurrency и idempotency](0011-concurrency-idempotency.md)
 
 `docs/DECISIONS.md` оставлен как совместимый индекс/историческая точка входа, но детали решений хранятся здесь.
