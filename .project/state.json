@@ -21,10 +21,10 @@
   "state_based_on_commit": "d07f4c43be699d437db95c0183aae16492de4c9d",
   "last_verified_commit": "d07f4c43be699d437db95c0183aae16492de4c9d",
   "active_branch": "bi-0002-web-auth",
-  "active_pr": null,
+  "active_pr": 2,
   "status": "ready",
   "updated_at": "2026-08-29",
-  "last_reconciled_at": "2026-08-29T16:32:00+03:00",
+  "last_reconciled_at": "2026-08-29T16:54:00+03:00",
   "phase": "phase-0-decision-gates",
   "implementation_status": "not_started",
   "active_work": "BI-0002-web-auth-decision",
@@ -63,6 +63,7 @@
   "notes": [
     "PCS V1 baseline remains 06cd250d2847ee87f66f73930d471d7c1f60991d.",
     "BI-0002 chooses Passkeys/WebAuthn plus server-side browser sessions for Web authentication.",
+    "PR #2 carries the BI-0002 decision and related context reconciliation.",
     "Product implementation has not started; this branch changes project decisions/specification only.",
     "Runtime/server access is outside the BI-0002 scope."
   ]
