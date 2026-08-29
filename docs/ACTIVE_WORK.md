@@ -1,6 +1,6 @@
 # Активная работа
 
-**Статус:** BI-0002 merged; BI-0003 оформлен в PR #4, ожидается финальный PCS CI. Product-code ещё не начат.  
+**Статус:** BI-0002 и BI-0003 merged; активная задача — первый product-code scaffold BI-0101.  
 **Обновлено:** 2026-08-29
 
 Этот файл отвечает только на вопрос: **что делается прямо сейчас и что является следующим конкретным шагом**.
@@ -8,70 +8,63 @@
 ## Активная задача
 
 ```text
-BI-0003 — Optimistic concurrency + idempotency
-Issue: #3
-Branch: bi-0003-concurrency-idempotency
-PR: #4
-Base commit: c1e70d768255c86c089f6b06f070d2c710fa0bb6
+BI-0101 — Repository scaffold
+Issue: #5
+Branch: ещё не создана
+PR: нет
+Base semantic commit: daea95ab7d042069c1cd962c038bb4fad8fd2d59
 Runtime scope: repository/local/CI only
 ```
 
-## Что уже принято до BI-0003
+## Закрытые prerequisite decisions
 
-`BI-0002` merged в `main` commit:
+### BI-0002
+
+Web authentication V1:
+
+```text
+Passkeys/WebAuthn
+→ server-side session
+→ Secure + HttpOnly opaque cookie
+→ backend authorization
+```
+
+ADR: `docs/ADR/0010-web-auth-passkeys.md`.
+
+Merged commit:
 
 ```text
 c1e70d768255c86c089f6b06f070d2c710fa0bb6
 ```
 
-Main PCS Context Check после merge: workflow run `33260864549` → success.
+Main PCS run `33260864549` → success.
 
-Web authentication V1 остаётся зафиксирован в `ADR-0010`: Passkeys/WebAuthn + server-side sessions.
+### BI-0003
 
-## Что фиксирует BI-0003
-
-`ADR-0011`:
-
-- mutable resources получают integer `version`;
-- Web/API используют `ETag` + `If-Match`;
-- internal Telegram/application use case передаёт `expected_version`;
-- stale write → `409 resource_version_conflict` без silent overwrite;
-- retry-sensitive mutation использует application `operation_id`;
-- Web/API передают `Idempotency-Key`;
-- Telegram сохраняет и повторно использует operation id подтверждённого flow;
-- idempotency state хранится в PostgreSQL;
-- same key + same payload возвращает тот же logical result;
-- same key + different payload → `409 idempotency_key_reused`;
-- concurrent duplicate → `idempotency_in_progress` без второго side effect;
-- неопределённый provider outcome → `unknown`, а не blind retry;
-- default completed retention V1 — 24 часа.
-
-Связанные API/DB/Security/PCS документы reconciled с решением.
-
-## Definition of Done BI-0003
-
-- [x] отдельный ADR принят;
-- [x] API contract reconciled;
-- [x] database model reconciled;
-- [x] security model reconciled;
-- [x] project state reconciled;
-- [x] BI-0002 merge/main CI зафиксированы;
-- [x] PR #4 открыт;
-- [ ] PCS structural validation PASS на финальном PR HEAD;
-- [ ] PCS readiness validation PASS на финальном PR HEAD;
-- [ ] PR merged.
-
-## Следующий безопасный шаг
-
-После merge BI-0003:
+Concurrency/idempotency:
 
 ```text
-BI-0101 — repository scaffold
+version + ETag/If-Match
+PostgreSQL-backed idempotency operations
+24h completed retention default
+unknown provider outcome != blind retry
 ```
 
-Это будет первый product-code этап.
+ADR: `docs/ADR/0011-concurrency-idempotency.md`.
 
-Целевая минимальная структура из backlog:
+Merged commit:
+
+```text
+daea95ab7d042069c1cd962c038bb4fad8fd2d59
+```
+
+Main PCS run `33261170180` → success.
+
+## Цель BI-0101
+
+Создать **минимальный рабочий scaffold**, а не пустой каталог будущих возможностей.
+
+Целевые верхнеуровневые границы:
 
 ```text
 apps/
@@ -81,29 +74,70 @@ tests/
 deploy/
 ```
 
-Без преждевременного создания пустых модулей для поздних Deployments/Proxy/Certificates/Monitoring.
+Первый scaffold должен дать:
 
-Оставшиеся decision gates stage-specific:
+- Python project metadata/dependency management;
+- FastAPI application entrypoint;
+- `/health` endpoint;
+- отдельный Telegram client entrypoint без provider/business logic;
+- application config foundation;
+- минимальную структуру для общего application core;
+- pytest/ruff foundation;
+- product-code GitHub Actions workflow;
+- `.env.example` только с placeholders/non-secret development defaults;
+- документацию запуска локальных проверок.
 
-1. Production secret storage — до реальных provider credentials.
-2. Zone-level/apex semantics — до административного apex write flow.
-3. Provider reconciliation/retry — до DNS provider write flow.
+## Не создавать преждевременно
 
-Они не блокируют scaffold.
+BI-0101 не должен изображать реализованными:
+
+- Cloudflare integration;
+- PostgreSQL business schema/migrations;
+- WebAuthn runtime;
+- полноценный Next.js Web Console;
+- SSH;
+- Deployments;
+- Proxy;
+- Certificates;
+- Monitoring.
+
+Для будущих модулей достаточно архитектурной документации до их фактического этапа.
+
+## Definition of Done BI-0101
+
+- [ ] рабочая ветка создана от актуального `main`;
+- [ ] scaffold импортируется;
+- [ ] FastAPI `/health` работает в test harness;
+- [ ] Telegram entrypoint не содержит инфраструктурной бизнес-логики;
+- [ ] config foundation создан без secrets;
+- [ ] `ruff check` PASS;
+- [ ] `pytest` PASS;
+- [ ] PCS structural validation PASS;
+- [ ] PCS readiness validation PASS;
+- [ ] PR открыт и CI зелёный;
+- [ ] runtime/server untouched.
+
+## Оставшиеся stage-specific decision gates
+
+1. Production secret storage — до подключения реальных provider credentials.
+2. Zone-level/apex DNS semantics — до административных apex write endpoints.
+3. Provider reconciliation/retry — до Cloudflare/DNS write flow.
+
+Они не блокируют BI-0101.
 
 ## Runtime boundary
 
-Текущая работа — **repository/local/CI only**.
+Текущая задача — **repository/local/CI only**.
 
-Не выполнялись и не разрешены BI-0003:
+Не разрешены и не требуются:
 
-- подключение к серверам;
+- server SSH;
 - staging/production deploy;
-- Cloudflare credentials/configuration;
-- Telegram runtime;
+- Cloudflare token;
 - production database;
-- SSH automation.
+- production Telegram token;
+- любые live infrastructure mutations.
 
-## После merge BI-0003
+## Следующий шаг
 
-PCS должен быть переключён на `main`/следующий work item, evidence — дополнен финальным merge + CI result, а следующей активной задачей становится `BI-0101`.
+Создать ветку BI-0101 от актуального `main`, реализовать минимальный scaffold, запустить product tests + PCS checks и открыть PR.
