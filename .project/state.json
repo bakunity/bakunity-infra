@@ -18,16 +18,16 @@
   "adr_dir": "docs/ADR",
   "incidents_dir": "docs/INCIDENTS",
   "evidence_doc": "docs/EVIDENCE.md",
-  "state_based_on_commit": "812a36a569e8b11d7eeb317b30b1b3525bad6fbc",
-  "last_verified_commit": "812a36a569e8b11d7eeb317b30b1b3525bad6fbc",
-  "active_branch": "main",
+  "state_based_on_commit": "d07f4c43be699d437db95c0183aae16492de4c9d",
+  "last_verified_commit": "d07f4c43be699d437db95c0183aae16492de4c9d",
+  "active_branch": "bi-0002-web-auth",
   "active_pr": null,
   "status": "ready",
-  "updated_at": "2026-08-21",
-  "last_reconciled_at": "2026-08-21T16:20:00+03:00",
-  "phase": "phase-0-complete-pre-v1",
+  "updated_at": "2026-08-29",
+  "last_reconciled_at": "2026-08-29T16:32:00+03:00",
+  "phase": "phase-0-decision-gates",
   "implementation_status": "not_started",
-  "active_work": "decision-gates-before-v1-implementation",
+  "active_work": "BI-0002-web-auth-decision",
   "knowledge_status": "CONFIRMED",
   "authoritative": {
     "project_state": "docs/PROJECT_STATE.md",
@@ -51,16 +51,19 @@
     "evidence": "docs/EVIDENCE.md"
   },
   "open_decision_gates": [
-    "web_authentication",
     "optimistic_concurrency",
     "idempotency_storage_ttl",
     "production_secret_storage",
     "zone_level_apex_dns_semantics",
     "provider_reconciliation_retry"
   ],
+  "closed_decision_gates": {
+    "web_authentication": "docs/ADR/0010-web-auth-passkeys.md"
+  },
   "notes": [
-    "Reconciled from the early PCS integration to PCS V1 baseline 06cd250d2847ee87f66f73930d471d7c1f60991d.",
-    "state_based_on_commit and last_verified_commit point to the pre-migration project-truth HEAD; the PCS migration changes context/tooling only and does not change product/runtime truth.",
-    "Runtime/server access was not used during the PCS V1 migration."
+    "PCS V1 baseline remains 06cd250d2847ee87f66f73930d471d7c1f60991d.",
+    "BI-0002 chooses Passkeys/WebAuthn plus server-side browser sessions for Web authentication.",
+    "Product implementation has not started; this branch changes project decisions/specification only.",
+    "Runtime/server access is outside the BI-0002 scope."
   ]
 }
