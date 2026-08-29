@@ -94,11 +94,72 @@
 }
 ```
 
-## Web authentication
+## Web authentication V1
 
-Конкретный способ Web-входа будет выбран перед реализацией identity-модуля. Независимо от механизма браузерной сессии, backend должен разрешать запрос во внутреннего `User`.
+Web authentication зафиксирован в `ADR-0010`: основной механизм — Passkeys/WebAuthn с server-side session.
 
-Telegram identity аналогично разрешается во внутреннего `User` через `telegram_id`.
+Browser не хранит роли/permissions как доверенное security state и не получает долгоживущий bearer token в `localStorage`.
+
+### POST /auth/webauthn/authentication/options
+
+Начать authentication ceremony.
+
+Ответ содержит только WebAuthn options/challenge, необходимые браузеру. Challenge одноразовый и ограничен по времени.
+
+### POST /auth/webauthn/authentication/verify
+
+Проверить WebAuthn assertion.
+
+Backend обязан проверить как минимум:
+
+- challenge;
+- RP ID;
+- origin;
+- credential;
+- signature;
+- credential state;
+- статус внутреннего `User`.
+
+После успешной проверки backend создаёт server-side session и устанавливает opaque session cookie с `Secure` + `HttpOnly` и подходящей `SameSite` policy.
+
+Успешный ответ может вернуть актуальный профиль пользователя либо минимальное подтверждение, после чего Web вызывает `GET /me`.
+
+### POST /auth/logout
+
+Отзывает текущую server-side session и очищает browser cookie.
+
+### Passkey enrollment
+
+Публичная самостоятельная регистрация по умолчанию не входит в V1.
+
+Добавление passkey выполняется отдельным authenticated/bootstrap use case. Предварительные endpoint:
+
+```text
+POST   /auth/webauthn/registration/options
+POST   /auth/webauthn/registration/verify
+GET    /me/passkeys
+DELETE /me/passkeys/{credential_id}
+```
+
+Точный bootstrap/invite flow фиксируется при реализации Identity module, но не должен менять выбранный authentication primitive.
+
+Удаление последнего credential должно иметь защиту от потери доступа.
+
+### Session security
+
+Cookie-authenticated write requests должны иметь CSRF protection.
+
+Backend должен поддерживать:
+
+- session expiration;
+- explicit logout;
+- server-side revocation;
+- запрет новых session для `blocked`/`disabled` user;
+- повторную authorization проверку по актуальному состоянию пользователя.
+
+Session identifier не является business identity пользователя.
+
+Telegram identity аналогично разрешается во внутреннего `User` через `telegram_id`; Telegram и Web не имеют независимых role stores.
 
 # DNS-зоны
 
@@ -369,12 +430,16 @@ Breaking changes требуют новой версии API или явно уп
 
 # Что остаётся уточнить перед разработкой
 
-- способ Web-authentication;
-- точная модель pagination;
+Web authentication mechanism закрыт ADR-0010.
+
+Остаётся уточнить:
+
+- точную модель pagination;
 - механизм optimistic concurrency;
 - idempotency storage;
 - формат provider-specific дополнительных параметров;
 - правила редактирования root/apex записей;
-- rate limits.
+- rate limits;
+- bootstrap/recovery UX для WebAuthn enrollment.
 
 Эти решения не мешают зафиксировать основные ресурсы и границы API уже сейчас.
