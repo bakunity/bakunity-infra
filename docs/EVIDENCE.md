@@ -107,6 +107,36 @@ PCS readiness validation: PASS
 - GitHub labels/project/ruleset manifests не применялись live;
 - server/staging/production checks не выполнялись.
 
+## 2026-08-29 — BI-0002 Web authentication decision
+
+**Result:** PASS  
+**Evidence type:** repository/CI validation  
+**Issue:** `#1`  
+**PR:** `#2`  
+**Validated commit:** `a299dd00408c6ca2de8f7c31dd22502a46b6ec2b`  
+**Workflow run:** `33256192021`
+
+Проверено в GitHub Actions job `validate-context`:
+
+```text
+Validate PCS structure   → success
+Validate PCS readiness   → success
+```
+
+Branch `bi-0002-web-auth` на момент проверки содержала:
+
+- `ADR-0010` с решением Passkeys/WebAuthn + server-side session;
+- reconciled API/DB/Web UX/Security docs;
+- обновлённый PCS state и active work;
+- сохранённый runtime boundary `repository/local/CI only`.
+
+Ограничения:
+
+- это validation документации/PCS, а не реализация WebAuthn runtime;
+- backend, DB migrations и Web Console ещё не реализованы;
+- server/staging/production не трогались;
+- после добавления этой evidence-записи новый PR HEAD должен снова пройти PCS checks перед merge.
+
 ## Шаблон будущей записи
 
 ```text
