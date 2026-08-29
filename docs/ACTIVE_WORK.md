@@ -1,25 +1,20 @@
 # Активная работа
 
-**Статус:** BI-0101 product scaffold проверен; финальный context-only PCS check перед merge.  
+**Статус:** BI-0101 merged; post-merge PCS pointer reconciled; активная задача — BI-0102 configuration foundation.  
 **Обновлено:** 2026-08-29
 
 Этот файл отвечает только на вопрос: **что делается прямо сейчас и что является следующим конкретным шагом**.
 
-## Активная задача
+## Завершённая задача BI-0101
 
 ```text
-BI-0101 — Repository scaffold
 Issue: #5
-Branch: bi-0101-repository-scaffold
 PR: #6
-Base commit: 0095bb7c73027f6e619959d85c9c4472cd025d29
-Validated product-code head: 93ce9415af1e4f793b0bae69607e3e2a8ebca7ae
+Merge commit: 91ae2239475a7c9560dfcff5a16424cb9cb3134c
 Runtime scope: repository/local/CI only
 ```
 
-## Что реализовано
-
-Минимальный scaffold создан без фиктивной реализации будущих модулей:
+BI-0101 создал первый product-code scaffold:
 
 ```text
 apps/
@@ -33,92 +28,76 @@ tests/
 deploy/README.md
 ```
 
-Добавлено:
+Подтверждено:
 
-- `pyproject.toml` с Python 3.13 и package/dependency metadata;
-- FastAPI application factory/entrypoint;
-- `GET /health`;
-- отдельный Telegram entrypoint и bootstrap router без provider/business logic;
-- `infrastructure/config.py` на `pydantic-settings`;
-- `.env.example` без реальных secrets;
-- `.gitignore` для env/venv/cache/frontend artifacts;
-- pytest health test;
-- pytest Telegram bootstrap/import test;
-- Ruff/compile/test foundation;
-- `.github/workflows/product-ci.yml`;
-- `docs/DEVELOPMENT.md` с local-only workflow;
-- Web и deploy boundaries без ложного утверждения о готовом frontend/runtime.
+- FastAPI `/health`;
+- Telegram bootstrap без provider/business logic;
+- typed settings foundation;
+- `.env.example` без secrets;
+- Ruff/compile/pytest Product CI;
+- local development docs.
 
-## Verification
+PR final Product CI и PCS были PASS. После squash merge Product CI на `main` run `33261628217` также PASS.
 
-Product CI run `33261488967` на product-code head `93ce9415...`:
+Первый post-merge PCS run `33261628261` корректно обнаружил stale `state_based_on_commit`: он ссылался на pre-squash PR head. Это не product failure; pointer reconciled на merge commit `91ae2239...`.
+
+## Активная задача
 
 ```text
-Install project → PASS
-Ruff            → PASS
-Compile         → PASS
-Tests           → PASS
+BI-0102 — Конфигурация приложения, logging и correlation ID
+Issue: #7
+Branch: ещё не создана
+PR: нет
+Base commit: 91ae2239475a7c9560dfcff5a16424cb9cb3134c
+Runtime scope: repository/local/CI only
 ```
 
-PCS Context Check run `33261488963` на том же head:
+## Цель BI-0102
 
-```text
-Structural validation → PASS
-Readiness validation  → PASS
-```
+Развить минимальный config scaffold до foundation для следующих PostgreSQL/Identity/provider задач:
 
-После этого обновлены только PCS/context/evidence документы; product-code не менялся. Требуется последний PCS run на финальном context head перед merge.
+- typed environment configuration;
+- явные development/test/staging/production semantics;
+- startup/config validation;
+- structured logging;
+- HTTP request/correlation ID middleware;
+- application correlation context, пригодный позже для Telegram/provider/audit;
+- защита sensitive values от логирования;
+- tests и документация.
 
-## Что намеренно НЕ реализовано
+## Что BI-0102 не делает
 
-BI-0101 не содержит:
+- не выбирает и не подключает production secret storage backend;
+- не добавляет реальные provider credentials;
+- не подключается к Cloudflare;
+- не создаёт PostgreSQL business schema;
+- не реализует WebAuthn/RBAC;
+- не делает staging/production deploy;
+- не трогает серверы.
 
-- Cloudflare adapter;
-- PostgreSQL business schema или Alembic migrations;
-- WebAuthn runtime;
-- browser session persistence;
-- concurrency/idempotency runtime;
-- полноценный Next.js Web Console;
-- SSH/server management;
-- deployment runtime;
-- reverse proxy/TLS/monitoring.
+Production secret storage остаётся отдельным decision gate до реальных provider credentials.
 
-## Definition of Done BI-0101
+## Definition of Done BI-0102
 
-- [x] рабочая ветка создана от актуального `main`;
-- [x] минимальный scaffold создан;
-- [x] FastAPI `/health` имеет test;
-- [x] Telegram entrypoint не содержит инфраструктурной бизнес-логики;
-- [x] config foundation создан без committed secrets;
-- [x] product-code CI workflow добавлен;
-- [x] local development guide добавлен;
-- [x] PR #6 открыт;
-- [x] `ruff check` PASS в CI;
-- [x] compile/import check PASS в CI;
-- [x] `pytest` PASS в CI;
-- [x] PCS structural validation PASS на verified product-code head;
-- [x] PCS readiness validation PASS на verified product-code head;
-- [ ] final context-only PCS validation PASS;
+- [ ] ветка создана от актуального `main` после успешного PCS reconcile;
+- [ ] config environment semantics реализованы и протестированы;
+- [ ] structured logging foundation реализован;
+- [ ] request/correlation ID проходит через HTTP request/response;
+- [ ] sensitive settings не попадают в logs;
+- [ ] `/health` не сломан;
+- [ ] Ruff/compile/pytest PASS;
+- [ ] PCS structural/readiness PASS;
 - [ ] PR merged;
-- [x] runtime/server untouched.
+- [ ] runtime/server untouched.
 
 ## Runtime boundary
 
-Текущая задача — **repository/local/CI only**.
+Текущая работа — **repository/local/CI only**.
 
-Не выполнялись и не разрешены:
-
-- server SSH;
-- staging/production deploy;
-- Cloudflare token/configuration;
-- production database;
-- production Telegram bot token/run;
-- любые live infrastructure mutations.
+Любые SSH, staging/production deploy, Cloudflare mutation, production DB и production Telegram запуск остаются за отдельным live gate.
 
 ## Следующий безопасный шаг
 
-1. Дождаться финального PCS Context Check после context/evidence reconciliation.
-2. При PASS — merge PR #6 без дополнительных product-code изменений.
-3. Проверить Product CI + PCS на merge commit `main`.
-4. Выполнить post-merge PCS reconcile.
-5. Перейти к `BI-0102 — Конфигурация приложения`.
+1. Получить PASS PCS structural/readiness после post-merge pointer reconciliation на `main`.
+2. Создать `bi-0102-application-configuration` от актуального `main`.
+3. Реализовать BI-0102 в bounded scope.
