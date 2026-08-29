@@ -1,0 +1,46 @@
+name: Product CI
+
+on:
+  pull_request:
+    paths:
+      - "apps/**"
+      - "modules/**"
+      - "infrastructure/**"
+      - "tests/**"
+      - "pyproject.toml"
+      - ".github/workflows/product-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/**"
+      - "modules/**"
+      - "infrastructure/**"
+      - "tests/**"
+      - "pyproject.toml"
+      - ".github/workflows/product-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install project
+        run: python -m pip install -e ".[dev]"
+
+      - name: Ruff
+        run: ruff check apps modules infrastructure tests
+
+      - name: Compile
+        run: python -m compileall -q apps modules infrastructure tests
+
+      - name: Tests
+        run: pytest -q
