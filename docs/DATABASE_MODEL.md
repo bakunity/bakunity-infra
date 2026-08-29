@@ -11,6 +11,8 @@
 - Секреты не хранятся в открытом виде.
 - Межмодульные связи не должны превращаться в произвольный доступ ко всем таблицам.
 - Audit log проектируется как append-oriented история.
+- Mutable business resources используют монотонный integer `version` для optimistic concurrency по ADR-0011.
+- Retry-sensitive mutation хранит idempotency/application operation state в PostgreSQL.
 
 ## Основные таблицы
 
@@ -203,6 +205,8 @@ name = bakunity.online
 provider_zone_id = Cloudflare zone ID
 ```
 
+Когда административные zone write endpoints появятся, zone resource также должен получить `version`/expected-version semantics, если он редактируется конкурентно.
+
 ### domains
 
 Управляемые домены/поддомены Bakunity Infra.
@@ -215,6 +219,7 @@ label TEXT
 fqdn TEXT UNIQUE
 status TEXT
 max_records INTEGER NULL
+version BIGINT NOT NULL DEFAULT 1
 created_at TIMESTAMPTZ
 updated_at TIMESTAMPTZ
 deleted_at TIMESTAMPTZ NULL
@@ -227,6 +232,8 @@ INDEX(zone_id)
 INDEX(owner_user_id)
 UNIQUE(fqdn)
 ```
+
+`version` увеличивается на 1 при каждой успешной логической mutation ресурса.
 
 ### dns_records
 
@@ -243,6 +250,7 @@ priority INTEGER NULL
 proxied BOOLEAN NULL
 sync_status TEXT
 last_error_code TEXT NULL
+version BIGINT NOT NULL DEFAULT 1
 created_at TIMESTAMPTZ
 updated_at TIMESTAMPTZ
 deleted_at TIMESTAMPTZ NULL
@@ -282,6 +290,7 @@ provider_name TEXT NULL
 region TEXT NULL
 status TEXT
 labels JSONB
+version BIGINT NOT NULL DEFAULT 1
 created_at TIMESTAMPTZ
 updated_at TIMESTAMPTZ
 deleted_at TIMESTAMPTZ NULL
@@ -307,6 +316,7 @@ domain_id UUID FK -> domains.id
 server_id UUID FK -> servers.id
 binding_type TEXT
 status TEXT
+version BIGINT NOT NULL DEFAULT 1
 created_at TIMESTAMPTZ
 updated_at TIMESTAMPTZ
 ```
@@ -327,6 +337,58 @@ load_balancer
 
 Для V1 желательно обеспечить одну активную основную привязку домена, если продуктовый сценарий не требует нескольких серверов.
 
+## Idempotency operations
+
+### idempotency_operations
+
+Persistence для retry-sensitive application operations по ADR-0011.
+
+```text
+id UUID PK
+actor_user_id UUID FK -> users.id NOT NULL
+operation_scope TEXT NOT NULL
+idempotency_key_hash BYTEA NOT NULL
+request_fingerprint BYTEA NOT NULL
+status TEXT NOT NULL
+resource_type TEXT NULL
+resource_id UUID NULL
+response_status INTEGER NULL
+response_body JSONB NULL
+last_error_code TEXT NULL
+created_at TIMESTAMPTZ
+updated_at TIMESTAMPTZ
+finalized_at TIMESTAMPTZ NULL
+expires_at TIMESTAMPTZ NULL
+```
+
+Уникальность:
+
+```text
+UNIQUE(actor_user_id, operation_scope, idempotency_key_hash)
+```
+
+В БД не обязательно хранить raw `Idempotency-Key`; предпочтительно хранить безопасный hash/verifier, достаточный для поиска и сравнения.
+
+Минимальные статусы:
+
+```text
+in_progress
+completed
+failed
+unknown
+```
+
+Семантика:
+
+- `in_progress` — логическая операция уже принята и не может стартовать второй раз;
+- `completed` — безопасный нормализованный result можно вернуть при retry без второго side effect;
+- `failed` — операция доказанно завершилась ошибкой; retry зависит от классификации failure;
+- `unknown` — нельзя доказать, применился ли внешний side effect; blind retry запрещён до reconciliation decision.
+
+Default retention для завершённой записи V1 — 24 часа после finalization. `in_progress`/`unknown` не очищаются обычным completed TTL без stale/reconciliation policy.
+
+`response_body` может хранить только безопасный нормализованный response snapshot; raw provider payload, tokens и credentials туда не записываются.
+
 ## Аудит
 
 ### audit_events
@@ -340,6 +402,7 @@ resource_type TEXT
 resource_id UUID NULL
 result TEXT
 request_id TEXT NULL
+operation_id UUID NULL
 ip_address INET NULL
 metadata JSONB
 created_at TIMESTAMPTZ
@@ -367,7 +430,9 @@ server.updated
 role.assigned
 ```
 
-Audit metadata не должна содержать токены, пароли, private keys, raw session token, WebAuthn challenge и другие секреты.
+`operation_id` позволяет связать audit event с retry-safe logical operation/idempotency record, если операция использует такой механизм.
+
+Audit metadata не должна содержать токены, пароли, private keys, raw session token, WebAuthn challenge, raw idempotency key и другие секреты.
 
 ## Возможная таблица лимитов
 
@@ -396,7 +461,8 @@ users
  ├── web_sessions
  ├── user_roles
  ├── domains
- └── servers
+ ├── servers
+ └── idempotency_operations
 
 roles
  └── role_permissions
@@ -409,7 +475,7 @@ roles
        └── zone-level dns_records
 
 audit_events
- └── ссылки на actor и изменённый ресурс
+ └── ссылки на actor, operation и изменённый ресурс
 ```
 
 ## Удаление данных и provider state
@@ -426,24 +492,52 @@ audit_events
 Если provider недоступен или результат неопределён:
 
 - ресурс остаётся в явном `error/deleting/pending` состоянии;
+- application operation при неопределённом side effect получает `unknown`;
 - пользователю возвращается безопасный error code;
-- операция может быть повторена через retry/reconciliation flow;
+- blind retry той же provider mutation запрещён, пока reconciliation policy не определит безопасное действие;
 - наличие message queue не является обязательным требованием V1.
 
 Queue/worker добавляются только если это реально требуется для надёжности или масштаба.
 
-## Конкурентные изменения
+## Optimistic concurrency
 
-При реализации необходимо предусмотреть защиту от ситуации, когда Web и Telegram одновременно меняют один ресурс.
+Решение зафиксировано в `ADR-0011`.
 
-Возможные механизмы:
+Для mutable resource используется integer:
 
-- `updated_at` + optimistic concurrency;
-- version column;
-- ETag/version contract;
-- транзакционные блокировки для критических операций.
+```text
+version BIGINT NOT NULL DEFAULT 1
+```
 
-Конкретный механизм фиксируется отдельным решением до реализации write endpoint.
+Обновление выполняется атомарно по ожидаемой версии:
+
+```text
+UPDATE resource
+SET ..., version = version + 1
+WHERE id = :id AND version = :expected_version
+```
+
+Если row не обновлён из-за stale version, application возвращает `resource_version_conflict` и не выполняет silent overwrite.
+
+`updated_at` остаётся полезным для UX/audit, но не является единственным concurrency token.
+
+Короткие transactional locks допустимы для конкретных инвариантов, но долгий provider call не должен удерживать DB transaction/row lock только ради concurrency.
+
+## Idempotency retention/cleanup
+
+Default completed retention V1:
+
+```text
+24 hours after finalization
+```
+
+Cleanup должен различать:
+
+- безопасно завершённые `completed/failed` записи;
+- stale `in_progress`;
+- `unknown`, требующий reconciliation.
+
+Нельзя удалять `unknown` запись обычным cron TTL и тем самым терять память о потенциальном внешнем side effect.
 
 ## Что не хранить в таблицах открытым текстом
 
@@ -452,6 +546,7 @@ Queue/worker добавляются только если это реально 
 - SSH private keys;
 - raw browser session token;
 - WebAuthn private keys;
+- raw reusable idempotency keys, если достаточно hash/verifier;
 - encryption master keys;
 - пароли провайдеров.
 

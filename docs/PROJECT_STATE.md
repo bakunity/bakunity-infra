@@ -2,7 +2,7 @@
 
 **Статус знания:** CONFIRMED  
 **Последняя сверка:** 2026-08-29  
-**Фаза:** Phase 0 decision gates; реализация V1 ещё не начата.
+**Фаза:** V1 foundation decisions; product implementation ещё не начата.
 
 Этот документ отвечает только на вопрос: **что истинно о Bakunity Infra прямо сейчас**.
 
@@ -13,7 +13,7 @@
 - Репозиторий проекта оформлен и содержит архитектурную/продуктовую спецификацию.
 - Архитектура зафиксирована как **modular monolith**.
 - Клиенты: **Web Console**, **Telegram Bot**, **REST API**.
-- Web и Telegram должны использовать одно application core и одну модель прав.
+- Web и Telegram используют одно application core и одну модель прав.
 - PostgreSQL выбран как внутренний source of truth для продуктового состояния.
 - Cloudflare выбран первым DNS provider adapter.
 - V1 зафиксирована как управление доменами/DNS с минимальным Server Catalog и Domain Binding.
@@ -21,13 +21,14 @@
 - Backlog V1 сформирован.
 - Project Context System интегрирована и reconciled до **PCS V1**, baseline `06cd250d2847ee87f66f73930d471d7c1f60991d`, профиль `standard-adapted`.
 - В репозитории есть canonical PCS validator с structural/readiness режимами и GitHub operational-layer manifests/workflow.
-- Web authentication decision закрыт в `ADR-0010`: V1 использует Passkeys/WebAuthn с server-side browser sessions.
+- `BI-0002` принят и merged: Web authentication V1 использует Passkeys/WebAuthn с server-side browser sessions (`ADR-0010`).
+- `BI-0003` фиксирует optimistic concurrency и idempotency (`ADR-0011`): integer resource version + ETag/If-Match, PostgreSQL-backed application operation/idempotency state, default completed TTL 24 часа.
 - Internal `User` остаётся независимым от Telegram/Web authentication mechanism; Telegram identity и WebAuthn credentials могут принадлежать одному User.
-- PCS V1 migration и BI-0002 не меняли сервер/runtime.
+- Server/runtime не менялись в рамках BI-0002/BI-0003.
 
 ## Чего сейчас нет
 
-**Product implementation ещё не начат.**
+**Product implementation ещё не начата.**
 
 В репозитории пока нет подтверждённой реализации:
 
@@ -35,6 +36,8 @@
 - PostgreSQL migrations;
 - WebAuthn runtime;
 - browser session persistence;
+- optimistic concurrency runtime;
+- idempotency runtime/storage migration;
 - Cloudflare adapter;
 - Telegram bot runtime;
 - Next.js Web Console;
@@ -44,7 +47,7 @@
 - deployments;
 - monitoring.
 
-Наличие этих элементов в архитектуре/roadmap означает план, а не реализованную возможность.
+Наличие этих элементов в architecture/API/DB/backlog означает зафиксированный план/contract, а не реализованную возможность.
 
 ## Зафиксированная граница V1
 
@@ -65,7 +68,8 @@ V1 включает:
 - Web Console UX;
 - REST API;
 - provider sync/error states;
-- idempotency/concurrency protection для критичных mutation;
+- optimistic concurrency protection;
+- idempotency protection для retry-sensitive infrastructure mutation;
 - staging/release hardening.
 
 V1 не включает SSH automation, reverse proxy, TLS issuance, deployments, server agent, полноценный monitoring, Kubernetes, собственный authoritative DNS или преждевременные микросервисы.
@@ -90,21 +94,53 @@ GET /api/v1/me + backend authorization
 
 Telegram не является обязательным Web IdP, а browser session не является business identity.
 
+### Optimistic concurrency + idempotency
+
+**Accepted:** `ADR-0011`.
+
+```text
+Mutable resource
+      ↓
+version BIGINT
+      ↓
+ETag / If-Match / expected_version
+      ↓
+stale write → 409 resource_version_conflict
+```
+
+Retry-sensitive mutation:
+
+```text
+Idempotency-Key / operation_id
+      ↓
+PostgreSQL idempotency_operations
+      ↓
+request fingerprint
+      ↓
+one logical operation
+      ↓
+completed result reused without second side effect
+```
+
+Default completed idempotency retention V1 — 24 часа. `unknown` external outcome не маскируется под success/blind retry.
+
 ## Открытые decision gates до соответствующей реализации
 
-Нужно отдельно зафиксировать решения по:
+Остаются stage-specific решения:
 
-1. Optimistic concurrency mechanism.
-2. `Idempotency-Key` storage/TTL.
-3. Production secret storage.
-4. Семантике zone-level/apex DNS operations.
-5. Provider reconciliation/retry strategy.
+1. Production secret storage — закрыть до реальных provider credentials.
+2. Семантика zone-level/apex DNS operations — закрыть до административного apex write flow.
+3. Provider reconciliation/retry strategy — закрыть до DNS provider write flow.
 
 Дополнительно при Identity implementation нужно конкретизировать bootstrap/recovery UX для WebAuthn enrollment, не меняя выбранный authentication primitive.
 
+Эти оставшиеся gate **не блокируют repository scaffold BI-0101**.
+
 ## Следующий инженерный рубеж
 
-После закрытия оставшихся обязательных decision gates первый реальный vertical milestone:
+Следующее действие после принятия BI-0003 — `BI-0101`: минимальный repository scaffold модульного монолита без преждевременного создания пустых абстракций.
+
+После foundation epics первый реальный vertical milestone остаётся:
 
 ```text
 Пользователь с permission
@@ -128,6 +164,18 @@ Audit фиксирует mutation
 
 До реализации product-code этот milestone остаётся планом.
 
+## Verification state
+
+BI-0002 merge commit:
+
+```text
+c1e70d768255c86c089f6b06f070d2c710fa0bb6
+```
+
+PCS Context Check на `main` после merge: workflow run `33260864549` → success.
+
+BI-0003 считается завершённым только после собственного PR CI PASS и merge.
+
 ## Authoritative ссылки
 
 - Цели: `docs/GOALS.md`
@@ -135,6 +183,7 @@ Audit фиксирует mutation
 - Архитектура: `docs/ARCHITECTURE.md`
 - Решения: `docs/ADR/`
 - Web authentication: `docs/ADR/0010-web-auth-passkeys.md`
+- Concurrency/idempotency: `docs/ADR/0011-concurrency-idempotency.md`
 - Roadmap: `docs/ROADMAP.md`
 - Backlog: `docs/BACKLOG_V1.md`
 - Phase 0 review: `docs/PHASE0_REVIEW.md`

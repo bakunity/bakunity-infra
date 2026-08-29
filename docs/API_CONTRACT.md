@@ -16,6 +16,8 @@
 - Telegram использует те же application use case, даже если технически запускается в одном процессе и не делает HTTP-запрос к самому себе.
 - Значимые изменения создают audit event.
 - Ошибки внешнего provider нормализуются и не должны раскрывать секреты.
+- Mutable resources используют одну optimistic concurrency semantics во всех клиентах.
+- Retry-sensitive infrastructure mutation использует application-level operation id/idempotency protection.
 
 ## Формат идентификаторов
 
@@ -52,7 +54,7 @@
 - 401 — не выполнен вход;
 - 403 — недостаточно прав;
 - 404 — ресурс не найден;
-- 409 — конфликт состояния/дубликат;
+- 409 — конфликт состояния/дубликат/idempotency conflict;
 - 422 — данные синтаксически корректны, но нарушают правила;
 - 429 — превышение лимитов/частоты;
 - 502/503 — временная проблема внешнего provider или инфраструктуры.
@@ -193,6 +195,8 @@ search
 
 Создание управляемого поддомена.
 
+Для этого endpoint `Idempotency-Key` обязателен после включения write implementation V1.
+
 ```json
 {
   "zone_id": "...",
@@ -235,6 +239,7 @@ Backend должен сам решить, какие DNS-операции тре
   "id": "...",
   "fqdn": "panel.bakunity.online",
   "status": "active",
+  "version": 1,
   "zone_id": "...",
   "owner_id": "...",
   "binding": {
@@ -244,25 +249,40 @@ Backend должен сам решить, какие DNS-операции тре
 }
 ```
 
+Mutable resource response также возвращает HTTP `ETag`, соответствующий текущему `version`.
+
 ## GET /domains/{domain_id}
 
 Карточка доменного ресурса.
+
+Ответ содержит `version` и `ETag`.
 
 ## PATCH /domains/{domain_id}
 
 Изменение разрешённых свойств ресурса. Изменение FQDN лучше рассматривать как отдельный use case, а не как произвольный patch.
 
+Клиент передаёт ожидаемую версию:
+
+```text
+If-Match: "7"
+```
+
+Если current version уже не `7`, mutation не выполняется и API возвращает `409 resource_version_conflict`.
+
 ## DELETE /domains/{domain_id}
 
 Удаление доменного ресурса.
 
+Для mutable resource destructive operation также использует `If-Match`/expected version.
+
 Backend обязан:
 
 1. проверить права;
-2. проверить зависимости;
-3. выполнить или запланировать внешние DNS-операции;
-4. записать результат в audit log;
-5. не сообщать об успешном удалении, если внешнее состояние осталось неопределённым.
+2. проверить ожидаемую версию;
+3. проверить зависимости;
+4. выполнить или запланировать внешние DNS-операции;
+5. записать результат в audit log;
+6. не сообщать об успешном удалении, если внешнее состояние осталось неопределённым.
 
 # DNS-записи
 
@@ -270,7 +290,11 @@ Backend обязан:
 
 Список записей домена.
 
+Mutable DNS record содержит `version`.
+
 ## POST /domains/{domain_id}/records
+
+Retry-sensitive create использует `Idempotency-Key`.
 
 Пример A:
 
@@ -297,11 +321,11 @@ Backend обязан:
 
 ## PATCH /records/{record_id}
 
-Изменение записи.
+Изменение записи с `If-Match` текущей версии.
 
 ## DELETE /records/{record_id}
 
-Удаление записи.
+Удаление записи с `If-Match` текущей версии.
 
 Поддерживаемые типы первой версии:
 
@@ -322,7 +346,7 @@ NS
 
 ## POST /servers
 
-Требует соответствующего права.
+Требует соответствующего права. Для create retry применяется `Idempotency-Key` там, где endpoint может быть безопасно повторён клиентом.
 
 ```json
 {
@@ -337,15 +361,15 @@ NS
 
 ## GET /servers/{server_id}
 
-Карточка сервера и связанные домены.
+Карточка сервера и связанные домены. Mutable representation содержит `version`/`ETag`.
 
 ## PATCH /servers/{server_id}
 
-Изменение метаданных.
+Изменение метаданных с `If-Match`.
 
 ## DELETE /servers/{server_id}
 
-Удаление/деактивация из каталога с проверкой активных связей.
+Удаление/деактивация из каталога с проверкой активных связей и `If-Match`.
 
 # Привязки доменов
 
@@ -360,9 +384,11 @@ NS
 }
 ```
 
+При замене существующей mutable binding backend использует expected version semantics.
+
 ## DELETE /domains/{domain_id}/binding
 
-Снять привязку.
+Снять привязку с expected version.
 
 На этапах reverse proxy/deploy этот контракт будет расширен отдельными ресурсами, а не десятками несвязанных полей в domain.
 
@@ -403,43 +429,133 @@ to
 
 Обычные пользовательские endpoint не должны случайно получать административные возможности через параметры запроса.
 
-# Идемпотентность
+# Optimistic concurrency
 
-Для операций создания инфраструктуры стоит поддержать `Idempotency-Key`, особенно когда клиент может повторить запрос после сетевой ошибки.
+Решение зафиксировано в `ADR-0011`.
 
-Ожидаемое поведение:
+Mutable resources используют монотонный integer `version`.
+
+HTTP read representation возвращает:
 
 ```text
-один пользователь + один endpoint + один Idempotency-Key
-→ одна логическая операция
+version: 7
+ETag: "7"
 ```
 
-Механизм хранения ключей определяется на этапе реализации.
+HTTP update/delete передаёт:
 
-# Конкурентность
+```text
+If-Match: "7"
+```
 
-API должен уметь обнаруживать конфликт устаревшего изменения, если Web и Telegram одновременно редактируют один ресурс.
+Internal Telegram/application call передаёт тот же concurrency token как `expected_version`.
 
-Конкретный вариант — version/ETag/updated_at — фиксируется перед реализацией write endpoint.
+Backend выполняет mutation только если expected version совпадает с current version. При успехе version увеличивается на 1.
 
-# Версионирование
+Stale write:
+
+```text
+HTTP 409
+error.code = resource_version_conflict
+```
+
+`updated_at` используется для отображения/аудита, но не является единственным concurrency token.
+
+Create operation version начинается с `1` и не требует `If-Match`.
+
+# Идемпотентность
+
+Решение зафиксировано в `ADR-0011`.
+
+Retry-sensitive infrastructure mutation использует application operation id.
+
+Для Web/API:
+
+```text
+Idempotency-Key: <opaque value>
+```
+
+Scope:
+
+```text
+actor_user_id + operation_scope + idempotency_key
+```
+
+Первый запрос сохраняет canonical request fingerprint в PostgreSQL.
+
+Поведение:
+
+```text
+same key + same scope + same payload
+→ тот же logical operation/result
+
+same key + same scope + different payload
+→ 409 idempotency_key_reused
+
+operation already in_progress
+→ 409 idempotency_in_progress
+
+provider outcome cannot be proven
+→ operation_state_unknown
+```
+
+Completed result не запускает повторный provider side effect.
+
+Default retention завершённой idempotency operation:
+
+```text
+24 hours
+```
+
+TTL конфигурируемый. `in_progress`/`unknown` state не удаляется обычным completed TTL без отдельной stale/reconciliation policy.
+
+Telegram не создаёт отдельную модель: финальный confirmation flow сохраняет application operation id и повторно использует его при retry той же операции.
+
+# Correlation
+
+Для значимой mutation должны быть различимы:
+
+- `request_id` — конкретный transport/request;
+- `operation_id` — логическая идемпотентная операция;
+- resource id/version;
+- audit event;
+- provider operation/result.
+
+Повторный HTTP request может иметь новый `request_id`, но тот же `operation_id`.
+
+# Нормализованные ошибки BI-0003
+
+```text
+resource_version_conflict
+idempotency_key_reused
+idempotency_in_progress
+operation_state_unknown
+```
+
+Raw provider error не должен становиться стабильным публичным API code.
+
+# Версионирование API
 
 Breaking changes требуют новой версии API или явно управляемой миграции контракта.
 
 Нельзя менять смысл существующего поля только потому, что изменился внешний DNS-provider.
 
-# Что остаётся уточнить перед разработкой
+# Что остаётся уточнить перед соответствующей реализацией
 
-Web authentication mechanism закрыт ADR-0010.
+Закрыты:
 
-Остаётся уточнить:
+- Web authentication mechanism — `ADR-0010`;
+- optimistic concurrency — `ADR-0011`;
+- idempotency storage/TTL — `ADR-0011`.
+
+Остаётся уточнить до соответствующих этапов:
 
 - точную модель pagination;
-- механизм optimistic concurrency;
-- idempotency storage;
+- production secret storage;
 - формат provider-specific дополнительных параметров;
 - правила редактирования root/apex записей;
+- provider reconciliation/retry strategy;
 - rate limits;
 - bootstrap/recovery UX для WebAuthn enrollment.
 
-Эти решения не мешают зафиксировать основные ресурсы и границы API уже сейчас.
+Эти решения не блокируют `BI-0101` repository scaffold. Secret storage должно быть закрыто до реальных provider credentials, а reconciliation/retry — до DNS write flow.

@@ -67,6 +67,28 @@ Security invariants:
 
 Telegram identity не используется как обязательный Web IdP; связывание Telegram и Web identity — отдельный безопасный use case.
 
+## Concurrency и защита от повторной mutation
+
+Решение зафиксировано в `ADR-0011`.
+
+Для mutable infrastructure resources backend использует optimistic concurrency по монотонному `version`. Устаревшая mutation должна завершаться конфликтом и не может молча перезаписать более новое состояние.
+
+Security invariants:
+
+- `updated_at` не является единственным concurrency token;
+- stale write не превращается в silent last-write-wins;
+- Web/API передают expected version через `If-Match`, а internal Telegram flow — тем же application contract через `expected_version`;
+- повторный запрос с тем же idempotency key не должен повторно запускать infrastructure/provider side effect;
+- idempotency state хранится в PostgreSQL и защищается unique constraint;
+- один key в одном scope нельзя переиспользовать с другим значимым payload;
+- request fingerprint не содержит raw secrets;
+- completed operation может безопасно вернуть сохранённый нормализованный результат;
+- `in_progress` operation не запускается второй раз;
+- если внешний provider outcome нельзя доказать, состояние становится `unknown`, а не `success` и не blind retry;
+- `request_id` и `operation_id` используются для correlation/audit, но сами по себе не дают дополнительных permissions.
+
+Default retention завершённой idempotency operation в V1 — 24 часа. `in_progress`/`unknown` записи не очищаются обычным TTL без отдельной stale/reconciliation policy.
+
 ## Журнал аудита
 
 Значимые изменения инфраструктуры должны создавать события аудита.
@@ -92,11 +114,15 @@ Telegram identity не используется как обязательный 
 
 Authentication/session events также могут попадать в security/audit trail, но без challenge, private material, session secrets и других чувствительных credential данных.
 
+Для retry-sensitive infrastructure mutation audit/correlation должен позволять связать `request_id`, application `operation_id`, resource и provider result без повторного side effect.
+
 ## Границы внешних провайдеров
 
 Cloudflare и будущие провайдеры должны использоваться только через контролируемые адаптеры.
 
 Ошибки внешних провайдеров не должны раскрывать секреты в Telegram-сообщениях, веб-ответах или логах.
+
+Неопределённый результат внешней mutation (`unknown`) не должен автоматически повторяться только потому, что клиент повторил HTTP/Telegram действие. Повтор зависит от provider reconciliation/retry policy.
 
 ## Управление серверами
 
@@ -120,11 +146,13 @@ Cloudflare и будущие провайдеры должны использо�
 
 Примеры: удаление управляемого домена, удаление важных production DNS-записей, удаление сервера или замена конфигурации маршрутизации.
 
+Destructive mutation также должна использовать ожидаемую resource version, если ресурс поддерживает optimistic concurrency.
+
 ## Логирование
 
 Логи не должны содержать значения секретов и чувствительный материал учётных данных.
 
-Структурированные логи должны при необходимости содержать correlation/request ID, чтобы действия Web, Telegram, API и внешнего провайдера можно было связать в рамках одной операции.
+Структурированные логи должны при необходимости содержать correlation/request ID и application operation ID, чтобы действия Web, Telegram, API и внешнего провайдера можно было связать в рамках одной операции.
 
 ## Резервные копии
 

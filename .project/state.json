@@ -18,16 +18,16 @@
   "adr_dir": "docs/ADR",
   "incidents_dir": "docs/INCIDENTS",
   "evidence_doc": "docs/EVIDENCE.md",
-  "state_based_on_commit": "d07f4c43be699d437db95c0183aae16492de4c9d",
-  "last_verified_commit": "d07f4c43be699d437db95c0183aae16492de4c9d",
-  "active_branch": "bi-0002-web-auth",
-  "active_pr": 2,
+  "state_based_on_commit": "c1e70d768255c86c089f6b06f070d2c710fa0bb6",
+  "last_verified_commit": "c1e70d768255c86c089f6b06f070d2c710fa0bb6",
+  "active_branch": "bi-0003-concurrency-idempotency",
+  "active_pr": 4,
   "status": "ready",
   "updated_at": "2026-08-29",
-  "last_reconciled_at": "2026-08-29T16:54:00+03:00",
-  "phase": "phase-0-decision-gates",
+  "last_reconciled_at": "2026-08-29T18:46:00+03:00",
+  "phase": "v1-foundation-decisions",
   "implementation_status": "not_started",
-  "active_work": "BI-0002-web-auth-decision",
+  "active_work": "BI-0003-concurrency-idempotency-decision",
   "knowledge_status": "CONFIRMED",
   "authoritative": {
     "project_state": "docs/PROJECT_STATE.md",
@@ -51,20 +51,22 @@
     "evidence": "docs/EVIDENCE.md"
   },
   "open_decision_gates": [
-    "optimistic_concurrency",
-    "idempotency_storage_ttl",
     "production_secret_storage",
     "zone_level_apex_dns_semantics",
     "provider_reconciliation_retry"
   ],
   "closed_decision_gates": {
-    "web_authentication": "docs/ADR/0010-web-auth-passkeys.md"
+    "web_authentication": "docs/ADR/0010-web-auth-passkeys.md",
+    "optimistic_concurrency": "docs/ADR/0011-concurrency-idempotency.md",
+    "idempotency_storage_ttl": "docs/ADR/0011-concurrency-idempotency.md"
   },
   "notes": [
     "PCS V1 baseline remains 06cd250d2847ee87f66f73930d471d7c1f60991d.",
-    "BI-0002 chooses Passkeys/WebAuthn plus server-side browser sessions for Web authentication.",
-    "PR #2 carries the BI-0002 decision and related context reconciliation.",
-    "Product implementation has not started; this branch changes project decisions/specification only.",
-    "Runtime/server access is outside the BI-0002 scope."
+    "BI-0002 was squash-merged to main as c1e70d768255c86c089f6b06f070d2c710fa0bb6 and main PCS CI run 33260864549 passed.",
+    "BI-0003 chooses integer resource version + ETag/If-Match and PostgreSQL-backed idempotency operations with a 24-hour completed retention default.",
+    "PR #4 carries BI-0003 and must pass PCS structural/readiness checks before merge.",
+    "Remaining decision gates are stage-specific and do not block BI-0101 repository scaffold.",
+    "Product implementation has not started; BI-0003 is repository/docs only.",
+    "Runtime/server access is outside BI-0003 scope."
   ]
 }
