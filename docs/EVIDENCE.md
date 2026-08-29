@@ -184,7 +184,53 @@ Validate PCS readiness   → success
 - production DB mutation;
 - production Telegram bot запуск.
 
-Следующая активная задача: `BI-0101`, Issue `#5`.
+## 2026-08-29 — BI-0101 repository scaffold
+
+**Result:** PASS  
+**Evidence type:** repository/product CI/PCS CI  
+**Issue:** `#5`  
+**PR:** `#6`  
+**Validated product-code head:** `93ce9415af1e4f793b0bae69607e3e2a8ebca7ae`  
+**Product CI run:** `33261488967`  
+**PCS Context Check run:** `33261488963`
+
+Product CI подтвердил:
+
+```text
+Install project → success
+Ruff            → success
+Compile         → success
+Tests           → success
+```
+
+PCS подтвердил:
+
+```text
+Structural validation → success
+Readiness validation  → success
+```
+
+Проверенный scaffold содержит:
+
+- Python 3.13 project/package metadata;
+- FastAPI application entrypoint;
+- `GET /health` и test;
+- Telegram bootstrap entrypoint/router без provider/business logic;
+- `pydantic-settings` configuration foundation;
+- `.env.example` без реальных secrets;
+- pytest/Ruff/compile quality foundation;
+- Product CI workflow;
+- local development guide;
+- Web/deploy boundaries без фиктивного runtime implementation.
+
+Ограничения:
+
+- PostgreSQL/Alembic ещё не подключены;
+- WebAuthn/runtime authorization ещё не реализованы;
+- Cloudflare/DNS business logic ещё не реализованы;
+- полноценный Web client ещё не создан;
+- server/staging/production не трогались;
+- после context/evidence update финальный PR HEAD должен снова пройти PCS Context Check; product code после указанного validated head не менялся.
 
 ## Шаблон будущей записи
 
