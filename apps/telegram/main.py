@@ -4,6 +4,7 @@ from aiogram import Bot, Dispatcher
 
 from apps.telegram.router import router
 from infrastructure.config import get_settings
+from infrastructure.observability import configure_logging
 
 
 def build_dispatcher() -> Dispatcher:
@@ -14,6 +15,8 @@ def build_dispatcher() -> Dispatcher:
 
 async def run() -> None:
     settings = get_settings()
+    configure_logging(settings)
+
     if settings.telegram_bot_token is None:
         raise RuntimeError("BAKUNITY_TELEGRAM_BOT_TOKEN is required to run Telegram client")
 
