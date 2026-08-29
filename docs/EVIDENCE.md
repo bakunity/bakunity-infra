@@ -51,27 +51,7 @@
 
 Источник ранней integration: `bakunity/Project-Context-System`, commit `d6b8aaa4e1450841a601daa77d9da26aae101c88`.
 
-На том baseline были зафиксированы основные PCS-принципы, по которым была создана первая адаптированная integration Bakunity Infra.
-
 Это историческое evidence ранней integration и не описывает актуальный PCS V1 baseline.
-
-## 2026-08-21 — Early PCS integrated into Bakunity Infra
-
-**Result:** PASS  
-**Evidence type:** repository state
-
-Ранняя integration добавила:
-
-- `AGENTS.md`;
-- `.project/state.json`;
-- `docs/PROJECT_STATE.md`;
-- `docs/ACTIVE_WORK.md`;
-- `docs/EVIDENCE.md`;
-- `docs/ADR/`;
-- `docs/INCIDENTS/`;
-- первоначальный `scripts/validate_context.py`.
-
-Позже эта integration была migrated/reconciled до PCS V1.
 
 ## 2026-08-21 — PCS V1 migration / reconciliation
 
@@ -83,29 +63,18 @@
 
 Проверено:
 
-- существующий project truth не заменён PCS templates;
-- `AGENTS.md` reconciled с PCS V1 и сохранил Bakunity Infra rules;
-- `.project/state.json` содержит canonical PCS V1 fields и project-specific fields;
-- добавлены Issue Forms, CODEOWNERS, GitHub manifests, `setup_github.py` и consumer PCS workflow;
+- project truth не заменён PCS templates;
+- `AGENTS.md` reconciled и сохранил Bakunity Infra rules;
+- canonical PCS V1 state fields добавлены;
+- Issue Forms/CODEOWNERS/GitHub manifests/setup script/workflow добавлены;
 - validator поддерживает `--ready`;
 - ADR-0001...ADR-0008 сохранены;
 - runtime/server не трогался.
 
-Validation:
-
 ```text
-python scripts/validate_context.py .
-PCS structural validation: PASS
-
-python scripts/validate_context.py . --ready
-PCS readiness validation: PASS
+python scripts/validate_context.py .          → PASS
+python scripts/validate_context.py . --ready  → PASS
 ```
-
-Ограничения:
-
-- validation подтверждает PCS structure/readiness, а не product runtime;
-- GitHub labels/project/ruleset manifests не применялись live;
-- server/staging/production checks не выполнялись.
 
 ## 2026-08-29 — BI-0002 Web authentication decision
 
@@ -115,21 +84,16 @@ PCS readiness validation: PASS
 **PR:** `#2`  
 **ADR:** `docs/ADR/0010-web-auth-passkeys.md`  
 **Merge commit:** `c1e70d768255c86c089f6b06f070d2c710fa0bb6`  
-**Main workflow run:** `33260864549`
+**Main PCS run:** `33260864549`
 
 Подтверждено:
 
-- Passkeys/WebAuthn выбран основным Web authentication mechanism V1;
-- browser authentication создаёт server-side session;
-- Telegram/Web связываются через общий internal `User`;
+- Passkeys/WebAuthn — основной Web auth V1;
+- server-side browser sessions;
+- Telegram/Web разрешаются в общий internal `User`;
 - API/DB/Web UX/Security context reconciled;
-- PR final PCS structural/readiness checks PASS;
-- после merge main PCS Context Check PASS.
-
-Ограничения:
-
-- WebAuthn runtime не реализовывался в BI-0002;
-- server/staging/production не трогались.
+- PR и main PCS checks PASS;
+- runtime/server не трогались.
 
 ## 2026-08-29 — BI-0003 optimistic concurrency + idempotency
 
@@ -139,85 +103,65 @@ PCS readiness validation: PASS
 **PR:** `#4`  
 **ADR:** `docs/ADR/0011-concurrency-idempotency.md`  
 **Final PR head:** `c7e93967bd287a5d1538423109b0e7aa92b2976e`  
-**PR workflow run:** `33261153253`  
+**PR PCS run:** `33261153253`  
 **Merge commit:** `daea95ab7d042069c1cd962c038bb4fad8fd2d59`  
-**Main workflow run:** `33261170180`
+**Main PCS run:** `33261170180`
 
-Проверено:
+Подтверждено:
 
-```text
-Validate PCS structure   → success
-Validate PCS readiness   → success
-```
-
-Принято:
-
-- integer `version` для optimistic concurrency mutable resources;
-- `ETag` + `If-Match` для HTTP и `expected_version` для internal application calls;
-- stale write → `409 resource_version_conflict`;
-- PostgreSQL-backed `idempotency_operations`;
-- request fingerprint и operation scope;
-- duplicate completed request не запускает второй side effect;
-- default completed retention — 24 часа;
-- неопределённый provider outcome → `unknown`, без blind retry.
-
-После squash merge `main` снова прошёл PCS structural/readiness workflow.
-
-Ограничения:
-
-- BI-0003 фиксировал contract/design, а не runtime persistence implementation;
-- PostgreSQL migration для version/idempotency ещё не создана;
-- server/staging/production не трогались.
-
-## 2026-08-29 — Runtime boundary до начала BI-0101
-
-**Result:** PASS  
-**Evidence type:** task scope / repository operations
-
-В BI-0002 и BI-0003 выполнялись только Git/repository/GitHub Actions операции.
-
-Не выполнялись:
-
-- SSH к серверу;
-- staging/production deploy;
-- Cloudflare mutation;
-- production DB mutation;
-- production Telegram bot запуск.
+- integer resource version;
+- `ETag` + `If-Match` / `expected_version`;
+- stale write → `resource_version_conflict`;
+- PostgreSQL-backed idempotency operation model;
+- request fingerprint/scope;
+- completed retention default 24 часа;
+- `unknown` provider outcome без blind retry;
+- PR/main PCS checks PASS;
+- runtime/server не трогались.
 
 ## 2026-08-29 — BI-0101 repository scaffold
 
 **Result:** PASS  
-**Evidence type:** repository/product CI/PCS CI  
+**Evidence type:** repository/product CI/PCS CI/merge  
 **Issue:** `#5`  
 **PR:** `#6`  
 **Validated product-code head:** `93ce9415af1e4f793b0bae69607e3e2a8ebca7ae`  
-**Product CI run:** `33261488967`  
-**PCS Context Check run:** `33261488963`
+**Final PR head:** `0407f78d59994846219bd578edb761273b41dea2`  
+**Initial Product CI run:** `33261488967`  
+**Initial PCS run:** `33261488963`  
+**Final Product CI run:** `33261598766`  
+**Final PCS run:** `33261598820`  
+**Merge commit:** `91ae2239475a7c9560dfcff5a16424cb9cb3134c`  
+**Main Product CI run:** `33261628217`
 
-Product CI подтвердил:
-
-```text
-Install project → success
-Ruff            → success
-Compile         → success
-Tests           → success
-```
-
-PCS подтвердил:
+PR verification:
 
 ```text
-Structural validation → success
-Readiness validation  → success
+Install project         → PASS
+Ruff                    → PASS
+Compile                 → PASS
+Tests                   → PASS
+PCS structural          → PASS
+PCS readiness           → PASS
 ```
 
-Проверенный scaffold содержит:
+Main Product CI после squash merge:
+
+```text
+Install project → PASS
+Ruff            → PASS
+Compile         → PASS
+Tests           → PASS
+```
+
+Проверенный/merged scaffold содержит:
 
 - Python 3.13 project/package metadata;
 - FastAPI application entrypoint;
 - `GET /health` и test;
 - Telegram bootstrap entrypoint/router без provider/business logic;
-- `pydantic-settings` configuration foundation;
-- `.env.example` без реальных secrets;
+- `pydantic-settings` config foundation;
+- `.env.example` без secrets;
 - pytest/Ruff/compile quality foundation;
 - Product CI workflow;
 - local development guide;
@@ -225,12 +169,40 @@ Readiness validation  → success
 
 Ограничения:
 
-- PostgreSQL/Alembic ещё не подключены;
-- WebAuthn/runtime authorization ещё не реализованы;
-- Cloudflare/DNS business logic ещё не реализованы;
-- полноценный Web client ещё не создан;
-- server/staging/production не трогались;
-- после context/evidence update финальный PR HEAD должен снова пройти PCS Context Check; product code после указанного validated head не менялся.
+- PostgreSQL/Alembic не подключены;
+- WebAuthn/RBAC runtime не реализованы;
+- Cloudflare/DNS business logic не реализованы;
+- полноценный Web client не создан;
+- server/staging/production не трогались.
+
+## 2026-08-29 — PCS drift после squash merge BI-0101
+
+**Result:** FAIL → RECONCILED  
+**Evidence type:** PCS post-merge validation  
+**Failing main PCS run:** `33261628261`  
+**Merge commit:** `91ae2239475a7c9560dfcff5a16424cb9cb3134c`
+
+Первый PCS structural check после squash merge завершился:
+
+```text
+PCS structural validation: FAIL
+ERROR: state_based_on_commit is not an ancestor of HEAD
+```
+
+Root cause: `.project/state.json` был корректно основан на проверенном PR head `93ce9415...`, но GitHub squash merge создал новый commit `91ae2239...`; PR head не является его Git-предком.
+
+Это **не product failure**: main Product CI на merge commit PASS.
+
+Reconciliation:
+
+- `state_based_on_commit` переведён на `91ae2239475a7c9560dfcff5a16424cb9cb3134c`;
+- `last_verified_commit` переведён на тот же merge commit;
+- `active_branch` возвращён на `main`;
+- `active_pr` очищен;
+- BI-0101 зафиксирован как merged;
+- активная работа переключена на BI-0102 / Issue #7.
+
+После этих context-only изменений требуется новый PCS structural/readiness PASS. Runtime/server при reconciliation не затрагивались.
 
 ## Шаблон будущей записи
 
