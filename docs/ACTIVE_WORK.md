@@ -1,6 +1,6 @@
 # Активная работа
 
-**Статус:** BI-0002 и BI-0003 merged; активная задача — первый product-code scaffold BI-0101.  
+**Статус:** BI-0101 product scaffold проверен; финальный context-only PCS check перед merge.  
 **Обновлено:** 2026-08-29
 
 Этот файл отвечает только на вопрос: **что делается прямо сейчас и что является следующим конкретным шагом**.
@@ -10,134 +10,115 @@
 ```text
 BI-0101 — Repository scaffold
 Issue: #5
-Branch: ещё не создана
-PR: нет
-Base semantic commit: daea95ab7d042069c1cd962c038bb4fad8fd2d59
+Branch: bi-0101-repository-scaffold
+PR: #6
+Base commit: 0095bb7c73027f6e619959d85c9c4472cd025d29
+Validated product-code head: 93ce9415af1e4f793b0bae69607e3e2a8ebca7ae
 Runtime scope: repository/local/CI only
 ```
 
-## Закрытые prerequisite decisions
+## Что реализовано
 
-### BI-0002
-
-Web authentication V1:
-
-```text
-Passkeys/WebAuthn
-→ server-side session
-→ Secure + HttpOnly opaque cookie
-→ backend authorization
-```
-
-ADR: `docs/ADR/0010-web-auth-passkeys.md`.
-
-Merged commit:
-
-```text
-c1e70d768255c86c089f6b06f070d2c710fa0bb6
-```
-
-Main PCS run `33260864549` → success.
-
-### BI-0003
-
-Concurrency/idempotency:
-
-```text
-version + ETag/If-Match
-PostgreSQL-backed idempotency operations
-24h completed retention default
-unknown provider outcome != blind retry
-```
-
-ADR: `docs/ADR/0011-concurrency-idempotency.md`.
-
-Merged commit:
-
-```text
-daea95ab7d042069c1cd962c038bb4fad8fd2d59
-```
-
-Main PCS run `33261170180` → success.
-
-## Цель BI-0101
-
-Создать **минимальный рабочий scaffold**, а не пустой каталог будущих возможностей.
-
-Целевые верхнеуровневые границы:
+Минимальный scaffold создан без фиктивной реализации будущих модулей:
 
 ```text
 apps/
+├── api/
+├── telegram/
+└── web/README.md
+
 modules/
 infrastructure/
 tests/
-deploy/
+deploy/README.md
 ```
 
-Первый scaffold должен дать:
+Добавлено:
 
-- Python project metadata/dependency management;
-- FastAPI application entrypoint;
-- `/health` endpoint;
-- отдельный Telegram client entrypoint без provider/business logic;
-- application config foundation;
-- минимальную структуру для общего application core;
-- pytest/ruff foundation;
-- product-code GitHub Actions workflow;
-- `.env.example` только с placeholders/non-secret development defaults;
-- документацию запуска локальных проверок.
+- `pyproject.toml` с Python 3.13 и package/dependency metadata;
+- FastAPI application factory/entrypoint;
+- `GET /health`;
+- отдельный Telegram entrypoint и bootstrap router без provider/business logic;
+- `infrastructure/config.py` на `pydantic-settings`;
+- `.env.example` без реальных secrets;
+- `.gitignore` для env/venv/cache/frontend artifacts;
+- pytest health test;
+- pytest Telegram bootstrap/import test;
+- Ruff/compile/test foundation;
+- `.github/workflows/product-ci.yml`;
+- `docs/DEVELOPMENT.md` с local-only workflow;
+- Web и deploy boundaries без ложного утверждения о готовом frontend/runtime.
 
-## Не создавать преждевременно
+## Verification
 
-BI-0101 не должен изображать реализованными:
+Product CI run `33261488967` на product-code head `93ce9415...`:
 
-- Cloudflare integration;
-- PostgreSQL business schema/migrations;
+```text
+Install project → PASS
+Ruff            → PASS
+Compile         → PASS
+Tests           → PASS
+```
+
+PCS Context Check run `33261488963` на том же head:
+
+```text
+Structural validation → PASS
+Readiness validation  → PASS
+```
+
+После этого обновлены только PCS/context/evidence документы; product-code не менялся. Требуется последний PCS run на финальном context head перед merge.
+
+## Что намеренно НЕ реализовано
+
+BI-0101 не содержит:
+
+- Cloudflare adapter;
+- PostgreSQL business schema или Alembic migrations;
 - WebAuthn runtime;
+- browser session persistence;
+- concurrency/idempotency runtime;
 - полноценный Next.js Web Console;
-- SSH;
-- Deployments;
-- Proxy;
-- Certificates;
-- Monitoring.
-
-Для будущих модулей достаточно архитектурной документации до их фактического этапа.
+- SSH/server management;
+- deployment runtime;
+- reverse proxy/TLS/monitoring.
 
 ## Definition of Done BI-0101
 
-- [ ] рабочая ветка создана от актуального `main`;
-- [ ] scaffold импортируется;
-- [ ] FastAPI `/health` работает в test harness;
-- [ ] Telegram entrypoint не содержит инфраструктурной бизнес-логики;
-- [ ] config foundation создан без secrets;
-- [ ] `ruff check` PASS;
-- [ ] `pytest` PASS;
-- [ ] PCS structural validation PASS;
-- [ ] PCS readiness validation PASS;
-- [ ] PR открыт и CI зелёный;
-- [ ] runtime/server untouched.
-
-## Оставшиеся stage-specific decision gates
-
-1. Production secret storage — до подключения реальных provider credentials.
-2. Zone-level/apex DNS semantics — до административных apex write endpoints.
-3. Provider reconciliation/retry — до Cloudflare/DNS write flow.
-
-Они не блокируют BI-0101.
+- [x] рабочая ветка создана от актуального `main`;
+- [x] минимальный scaffold создан;
+- [x] FastAPI `/health` имеет test;
+- [x] Telegram entrypoint не содержит инфраструктурной бизнес-логики;
+- [x] config foundation создан без committed secrets;
+- [x] product-code CI workflow добавлен;
+- [x] local development guide добавлен;
+- [x] PR #6 открыт;
+- [x] `ruff check` PASS в CI;
+- [x] compile/import check PASS в CI;
+- [x] `pytest` PASS в CI;
+- [x] PCS structural validation PASS на verified product-code head;
+- [x] PCS readiness validation PASS на verified product-code head;
+- [ ] final context-only PCS validation PASS;
+- [ ] PR merged;
+- [x] runtime/server untouched.
 
 ## Runtime boundary
 
 Текущая задача — **repository/local/CI only**.
 
-Не разрешены и не требуются:
+Не выполнялись и не разрешены:
 
 - server SSH;
 - staging/production deploy;
-- Cloudflare token;
+- Cloudflare token/configuration;
 - production database;
-- production Telegram token;
+- production Telegram bot token/run;
 - любые live infrastructure mutations.
 
-## Следующий шаг
+## Следующий безопасный шаг
 
-Создать ветку BI-0101 от актуального `main`, реализовать минимальный scaffold, запустить product tests + PCS checks и открыть PR.
+1. Дождаться финального PCS Context Check после context/evidence reconciliation.
+2. При PASS — merge PR #6 без дополнительных product-code изменений.
+3. Проверить Product CI + PCS на merge commit `main`.
+4. Выполнить post-merge PCS reconcile.
+5. Перейти к `BI-0102 — Конфигурация приложения`.
