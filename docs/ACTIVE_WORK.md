@@ -1,94 +1,115 @@
 # Активная работа
 
-**Статус:** BI-0101 merged; post-merge PCS pointer reconciled; активная задача — BI-0102 configuration foundation.  
+**Статус:** BI-0102 implementation находится в PR #8; выполняется Product CI + PCS verification.  
 **Обновлено:** 2026-08-29
 
 Этот файл отвечает только на вопрос: **что делается прямо сейчас и что является следующим конкретным шагом**.
-
-## Завершённая задача BI-0101
-
-```text
-Issue: #5
-PR: #6
-Merge commit: 91ae2239475a7c9560dfcff5a16424cb9cb3134c
-Runtime scope: repository/local/CI only
-```
-
-BI-0101 создал первый product-code scaffold:
-
-```text
-apps/
-├── api/
-├── telegram/
-└── web/README.md
-
-modules/
-infrastructure/
-tests/
-deploy/README.md
-```
-
-Подтверждено:
-
-- FastAPI `/health`;
-- Telegram bootstrap без provider/business logic;
-- typed settings foundation;
-- `.env.example` без secrets;
-- Ruff/compile/pytest Product CI;
-- local development docs.
-
-PR final Product CI и PCS были PASS. После squash merge Product CI на `main` run `33261628217` также PASS.
-
-Первый post-merge PCS run `33261628261` корректно обнаружил stale `state_based_on_commit`: он ссылался на pre-squash PR head. Это не product failure; pointer reconciled на merge commit `91ae2239...`.
 
 ## Активная задача
 
 ```text
 BI-0102 — Конфигурация приложения, logging и correlation ID
 Issue: #7
-Branch: ещё не создана
-PR: нет
-Base commit: 91ae2239475a7c9560dfcff5a16424cb9cb3134c
+Branch: bi-0102-application-configuration
+PR: #8
+Base commit: f00fc1f03a134ae358458e7e18fa822527c6795a
 Runtime scope: repository/local/CI only
 ```
 
-## Цель BI-0102
+## Что реализовано в ветке
 
-Развить минимальный config scaffold до foundation для следующих PostgreSQL/Identity/provider задач:
+### Typed configuration
 
-- typed environment configuration;
-- явные development/test/staging/production semantics;
-- startup/config validation;
-- structured logging;
-- HTTP request/correlation ID middleware;
-- application correlation context, пригодный позже для Telegram/provider/audit;
-- защита sensitive values от логирования;
-- tests и документация.
+`infrastructure/config.py`:
 
-## Что BI-0102 не делает
+```text
+AppEnvironment:
+- development
+- test
+- staging
+- production
+```
 
-- не выбирает и не подключает production secret storage backend;
-- не добавляет реальные provider credentials;
-- не подключается к Cloudflare;
-- не создаёт PostgreSQL business schema;
-- не реализует WebAuthn/RBAC;
-- не делает staging/production deploy;
-- не трогает серверы.
+Также:
 
-Production secret storage остаётся отдельным decision gate до реальных provider credentials.
+- typed/normalized log level;
+- bounded app name/request ID header settings;
+- `is_production_like` helper;
+- `SecretStr` для Telegram token;
+- `BAKUNITY_` environment prefix сохранён.
+
+### Structured logging
+
+`infrastructure/observability.py`:
+
+- stdlib JSON formatter;
+- service/environment context;
+- ContextVar request ID;
+- безопасная нормализация входящего request ID;
+- UUID generation при отсутствии/невалидном значении;
+- общий `configure_logging()` для API и Telegram process.
+
+### HTTP correlation
+
+`apps/api/middleware.py`:
+
+```text
+incoming X-Request-ID
+→ validate / regenerate
+→ bind ContextVar
+→ application
+→ response X-Request-ID
+→ structured request log
+→ reset context
+```
+
+Request ID — correlation metadata, не authentication/identity/permission.
+
+### Tests
+
+Покрываются:
+
+- `/health` + generated request ID;
+- safe client request ID preservation;
+- unsafe request ID replacement;
+- typed environment parsing;
+- log-level normalization;
+- invalid environment rejection;
+- SecretStr redaction in settings repr;
+- JSON log formatter request context.
+
+### Docs/config sample
+
+Обновлены `.env.example` и `docs/DEVELOPMENT.md`.
+
+## Что BI-0102 намеренно НЕ делает
+
+- production secret storage backend;
+- real provider credentials;
+- Cloudflare integration;
+- PostgreSQL business schema;
+- WebAuthn/RBAC runtime;
+- staging/production deploy;
+- server mutation.
 
 ## Definition of Done BI-0102
 
-- [ ] ветка создана от актуального `main` после успешного PCS reconcile;
-- [ ] config environment semantics реализованы и протестированы;
-- [ ] structured logging foundation реализован;
-- [ ] request/correlation ID проходит через HTTP request/response;
-- [ ] sensitive settings не попадают в logs;
-- [ ] `/health` не сломан;
-- [ ] Ruff/compile/pytest PASS;
-- [ ] PCS structural/readiness PASS;
+- [x] ветка создана от стабильного `main` после PCS PASS;
+- [x] config environment semantics реализованы;
+- [x] structured logging foundation реализован;
+- [x] request/correlation ID middleware реализован;
+- [x] sensitive config использует redacted `SecretStr` representation;
+- [x] `/health` contract сохранён;
+- [x] tests добавлены;
+- [x] docs/.env example reconciled;
+- [x] PR #8 открыт;
+- [ ] Ruff PASS;
+- [ ] compile PASS;
+- [ ] pytest PASS;
+- [ ] PCS structural PASS;
+- [ ] PCS readiness PASS;
 - [ ] PR merged;
-- [ ] runtime/server untouched.
+- [x] runtime/server untouched.
 
 ## Runtime boundary
 
@@ -98,6 +119,4 @@ Production secret storage остаётся отдельным decision gate до
 
 ## Следующий безопасный шаг
 
-1. Получить PASS PCS structural/readiness после post-merge pointer reconciliation на `main`.
-2. Создать `bi-0102-application-configuration` от актуального `main`.
-3. Реализовать BI-0102 в bounded scope.
+Получить Product CI + PCS checks на PR #8; исправлять только подтверждённые проблемы реализации/контекста.
