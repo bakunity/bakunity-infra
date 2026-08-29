@@ -45,6 +45,28 @@ Bakunity Infra предназначена для управления опера
 
 Telegram identity и Web identity при необходимости должны сопоставляться с одной внутренней моделью пользователя.
 
+## Web authentication V1
+
+Web authentication для V1 зафиксирован в `ADR-0010`: основной механизм — **Passkeys/WebAuthn**.
+
+Security invariants:
+
+- private key passkey никогда не попадает на backend;
+- backend проверяет challenge, RP ID, origin и WebAuthn signature;
+- challenge одноразовый и ограничен по времени;
+- пользователь может иметь несколько WebAuthn credentials;
+- credential public material не является session и не является ролью/permission;
+- успешная authentication создаёт server-side session;
+- browser получает только opaque session identifier через `Secure` + `HttpOnly` cookie;
+- write endpoints с cookie authentication защищаются от CSRF;
+- session должна поддерживать expiration, logout и server-side revocation;
+- `blocked`/`disabled` пользователь не получает новую session и не может выполнять mutation;
+- authorization вычисляется backend из актуального состояния пользователя и ролей, а не доверяется cookie/browser state.
+
+Публичная самостоятельная регистрация по умолчанию не входит в V1. Enrollment passkey выполняется через контролируемый bootstrap/invite или уже аутентифицированный account flow.
+
+Telegram identity не используется как обязательный Web IdP; связывание Telegram и Web identity — отдельный безопасный use case.
+
 ## Журнал аудита
 
 Значимые изменения инфраструктуры должны создавать события аудита.
@@ -67,6 +89,8 @@ Telegram identity и Web identity при необходимости должны
 - когда это произошло;
 - успешно ли завершилось действие;
 - какие метаданные нужны для расследования без записи секретов в лог.
+
+Authentication/session events также могут попадать в security/audit trail, но без challenge, private material, session secrets и других чувствительных credential данных.
 
 ## Границы внешних провайдеров
 
