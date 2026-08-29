@@ -1,80 +1,74 @@
 # Активная работа
 
-**Статус:** PCS V1 migration/reconciliation завершена; product-code не разрабатывается.  
-**Обновлено:** 2026-08-21
+**Статус:** BI-0002 выполнен в рабочей ветке; ожидает PR/review. Product-code ещё не начат.  
+**Обновлено:** 2026-08-29
 
 Этот файл отвечает только на вопрос: **что делается прямо сейчас и что является следующим конкретным шагом**.
 
-## Сейчас
+## Активная задача
 
-Существующая ранняя интеграция Project Context System reconciled до PCS V1 baseline `06cd250d2847ee87f66f73930d471d7c1f60991d` в профиле `standard-adapted`.
+```text
+BI-0002 — Web authentication decision
+Issue: #1
+Branch: bi-0002-web-auth
+Base commit: d07f4c43be699d437db95c0183aae16492de4c9d
+Runtime scope: repository/local/CI only
+```
 
-Migration была repository-only:
+## Что принято в BI-0002
 
-- server/runtime не трогался;
-- product implementation не начиналась;
-- project-specific truth сохранена;
-- authoritative product/architecture/API/DB/UX/security документы не заменялись шаблонами PCS.
+Web authentication V1 зафиксирован в `ADR-0010`:
 
-На момент этой записи активной задачи по реализации backend/Web/Telegram нет.
+- основной механизм — Passkeys/WebAuthn;
+- internal `User` не зависит от способа входа;
+- Telegram identity и WebAuthn credential могут принадлежать одному User;
+- после WebAuthn verification создаётся server-side session;
+- browser получает opaque `Secure` + `HttpOnly` cookie;
+- backend повторно выполняет authorization по актуальному состоянию пользователя;
+- публичная самостоятельная регистрация по умолчанию не входит в V1;
+- Telegram не является обязательным Web IdP.
+
+Связанные API/DB/Web UX/Security документы reconciled с решением.
+
+## Definition of Done BI-0002
+
+- [x] отдельный ADR принят;
+- [x] API contract reconciled;
+- [x] database model reconciled;
+- [x] Web UX reconciled;
+- [x] security model reconciled;
+- [x] project context обновлён;
+- [ ] PCS structural validation в PR CI;
+- [ ] PCS readiness validation в PR CI;
+- [ ] PR reviewed/merged.
 
 ## Следующий безопасный шаг
 
-Первый decision gate перед началом соответствующей реализации:
+После принятия BI-0002:
 
-1. `BI-0002` — выбрать Web authentication mechanism и оформить ADR.
-2. Затем `BI-0003` — concurrency/idempotency decisions.
-3. До реальных provider credentials — production secret storage decision.
-4. До write DNS flows — reconciliation/retry semantics.
-
-## После явного старта разработки
-
-Порядок берётся из `docs/BACKLOG_V1.md`:
-
-```text
-Scaffold
-   ↓
-Identity + Permissions + Audit
-   ↓
-Cloudflare + Zones
-   ↓
-Create Domain через IPv4
-   ↓
-Telegram create flow
-   ↓
-Web create flow
-```
-
-## Не считать активной работой
-
-Пока нет явного решения начать реализацию, не создавать автоматически:
-
-- backend scaffold;
-- Next.js приложение;
-- Telegram runtime;
-- Docker/production deployment;
-- Cloudflare production credentials;
-- SSH automation.
+1. `BI-0003` — зафиксировать optimistic concurrency + idempotency decisions.
+2. Затем `BI-0101` — создать минимальный repository scaffold модульного монолита.
+3. До реальных provider credentials — закрыть production secret storage decision.
+4. До DNS write flows — закрыть provider reconciliation/retry semantics.
 
 ## Runtime boundary
 
-По умолчанию текущая работа — repository/local/CI only.
+Текущая работа — **repository/local/CI only**.
 
-Подключение к серверам, staging/production deploy и любые runtime mutations требуют отдельной явной задачи и live gate.
+Не выполнялись и не разрешены этой задачей:
+
+- подключение к серверам;
+- staging/production deploy;
+- Cloudflare credentials/configuration;
+- Telegram runtime;
+- production database;
+- SSH automation.
 
 ## Правило обновления
 
-Когда начинается новая задача, этот файл должен получить:
+После merge BI-0002:
 
-- ID задачи/epic;
-- цель;
-- base commit;
-- linked Issue, если есть;
-- allowed/forbidden scope;
-- затрагиваемые authoritative документы;
-- критерий завершения;
-- tests/smoke plan;
-- runtime scope;
-- фактический результат после завершения.
-
-После завершения evidence переносится в `docs/EVIDENCE.md`, а текущее состояние — в `docs/PROJECT_STATE.md` при необходимости.
+- `PROJECT_STATE.md` фиксирует WebAuthn decision как текущую truth;
+- `.project/state.json` удаляет `web_authentication` из open decision gates;
+- `ACTIVE_WORK.md` переключается на BI-0003;
+- evidence фиксирует CI/validation результат.
