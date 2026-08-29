@@ -21,10 +21,10 @@
   "state_based_on_commit": "0095bb7c73027f6e619959d85c9c4472cd025d29",
   "last_verified_commit": "0095bb7c73027f6e619959d85c9c4472cd025d29",
   "active_branch": "bi-0101-repository-scaffold",
-  "active_pr": null,
+  "active_pr": 6,
   "status": "ready",
   "updated_at": "2026-08-29",
-  "last_reconciled_at": "2026-08-29T18:55:00+03:00",
+  "last_reconciled_at": "2026-08-29T18:56:00+03:00",
   "phase": "v1-implementation-start",
   "implementation_status": "in_progress",
   "active_work": "BI-0101-repository-scaffold",
@@ -65,7 +65,7 @@
   "notes": [
     "PCS V1 baseline remains 06cd250d2847ee87f66f73930d471d7c1f60991d.",
     "BI-0002 and BI-0003 are merged and verified on main.",
-    "BI-0101 is the first product-code task and is active on bi-0101-repository-scaffold.",
+    "BI-0101 is the first product-code task; PR #6 carries its implementation.",
     "The scaffold contains FastAPI/Telegram/config/test/CI foundations only; provider/business/runtime implementation is not part of BI-0101.",
     "Remaining decision gates are stage-specific and do not block the scaffold.",
     "Runtime/server access remains outside current scope."
